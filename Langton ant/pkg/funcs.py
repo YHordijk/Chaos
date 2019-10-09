@@ -152,22 +152,24 @@ class Ant:
 	def set_value(self, value):
 		return self.grid.set_value(self.pos, value)
 
-	def start(self, iterations, rule='LR', draw=True, resolution=(1280, 720), FPS=120):
+	def start(self, iterations, rule='LR', draw=True, resolution=(1280, 720), FPS=5000):
 		if draw:
 			self.display = Display(resolution, FPS)
 
 		for i in range(iterations):
 			self.display.tick()
-			self.display.surface.fill((255,255,255))
-			grid_surface = self.grid.get_grid_surface(self.pos)
+			if i % int(FPS/5) == 0:
+				self.display.surface.fill((255,255,255))
+				grid_surface = self.grid.get_grid_surface(self.pos)
+				pg.transform.scale(grid_surface, resolution, self.display.surface)
+				pg.display.flip()
 
 			if i == 0:
 				self.forward()
 
 			self.rule(rule)
 
-			pg.transform.scale(grid_surface, resolution, self.display.surface)
-			pg.display.flip()
+			
 
 			for event in pg.event.get():
 				if event.type == pg.QUIT:
