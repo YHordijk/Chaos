@@ -2,4 +2,6 @@ import pkg.funcs as fn
 
 ant = fn.Ant()
 
-ant.start(iterations=15000000, rule='LR', FPS=60, draw_every_frame=False)
+ant.walk(rule='RRRLRLRLLRRRLLRLRLLLLRRRLLRLRLLRLLRLRLLRLRLRLRLLRLLLRRLRLRLRLRLLR', FPS=1000000, draw_grid=False)
+# ant.walk(rule='LRRRRRLLR', FPS=9000, draw_grid=False)
+# ant.walk(rule='RRLLLRLLLRRR', FPS=9000, draw_grid=False)

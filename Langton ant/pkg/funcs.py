@@ -1,9 +1,11 @@
 import pygame as pg 
 import numpy as np 
+import math
+import colour as c
 
 
 class Grid:
-	def __init__(self, cell_size=20, size=[[-5, 5],[-5, 5]]):
+	def __init__(self, cell_size=20, size=[[-5, 5],[-5, 5]], number_of_grid_lines=10):
 		self.cell_size = cell_size
 		#size[0] is size in x-direction, size[1] is size in y-direction. First index is size in negative direction, rel. origin and second positive
 		self.size = size
@@ -11,6 +13,8 @@ class Grid:
 		# self.values = np.random.choice(2, (self.length_vertical, self.length_horizontal))
 		# self.values = np.random.rand(self.length_vertical, self.length_horizontal)
 		self.colours = None
+		self.max_value = 0
+		self.number_of_grid_lines = number_of_grid_lines
 
 	@property 
 	def length_horizontal(self):
@@ -70,6 +74,8 @@ class Grid:
 		surface = pg.Surface(size)
 		surface.fill((255,255,255))
 
+		
+
 		coords = []
 
 		for h in range(self.length_horizontal):
@@ -77,44 +83,39 @@ class Grid:
 				x = h * self.cell_size
 				y = v * self.cell_size
 
-				value = self.values[v][h]
-				if value == 0:
-					color = (255,255,255)
-				elif value == 1:
-					color = (255,0,0)
-				elif value == 2:
-					color = (0,255,0)
-				elif value == 3:
-					color = (0,0,255)
-				elif value == 4:
-					color = (0,255,255)
-				elif value == 5:
-					color = (255,0,255)
-				elif value == 6:
-					color = (255,255,0)
+				value = int(self.values[v][h])
+				if self.colours == None:
+					white = c.Color(rgb=(1,1,1))
+					self.colours = list(white.range_to(c.Color(rgb=(0.8,0.2,0)), self.max_value))
+				color = 255*np.asarray(self.colours[value].rgb)
+				
 
 				rect = pg.Rect(x, y, self.cell_size, self.cell_size)
 				pg.draw.rect(surface, color, rect)
 
+		if self.draw_grid:
+			y_max = self.length_vertical * self.cell_size
+			f = math.floor(self.length_horizontal/self.number_of_grid_lines)
+			for h in range(self.length_horizontal):
+				if h%f == 0:
+					x = h * self.cell_size
+					coords.append([(x, 0), (x, y_max)])
+					if h == self.length_horizontal - 1:
+						x = (h + 1) * self.cell_size
+						coords.append([(x, 0), (x, y_max)])
 
-		y_max = self.length_vertical * self.cell_size
-		for h in range(self.length_horizontal):
-			x = h * self.cell_size
-			coords.append([(x, 0), (x, y_max)])
-			if h == self.length_horizontal - 1:
-				x = (h + 1) * self.cell_size
-				coords.append([(x, 0), (x, y_max)])
+			x_max = self.length_horizontal * self.cell_size
+			f = math.floor(self.length_vertical/self.number_of_grid_lines)
+			for v in range(self.length_vertical):
+				if v%f == 0:
+					y = v * self.cell_size
+					coords.append([(0, y), (x_max, y)])
+					if v == self.length_vertical - 1:
+						y = (v + 1) * self.cell_size
+						coords.append([(0, y), (x_max, y)])
 
-		x_max = self.length_horizontal * self.cell_size
-		for v in range(self.length_vertical):
-			y = v * self.cell_size
-			coords.append([(0, y), (x_max, y)])
-			if v == self.length_vertical - 1:
-				y = (v + 1) * self.cell_size
-				coords.append([(0, y), (x_max, y)])
-
-		for coord in coords:
-				pg.draw.line(surface, (0,0,0), coord[0], coord[1], 1)
+			for coord in coords:
+					pg.draw.line(surface, (150,150,150), coord[0], coord[1], 1)
 
 		x, y = ant_pos[0] - self.size[0][0], ant_pos[1] - self.size[1][0]
 		center = (int((x + 0.5) * self.cell_size), int((y + 0.5) * self.cell_size))
@@ -152,13 +153,17 @@ class Ant:
 	def set_value(self, value):
 		return self.grid.set_value(self.pos, value)
 
-	def start(self, iterations, rule='LR', draw=True, resolution=(1280, 720), FPS=5000, draw_every_frame=False):
+	def walk(self, iterations=-1, rule='LR', draw=True, resolution=(1280, 720), FPS=5, draw_every_frame=False, draw_grid=True):
 		if draw:
 			self.display = Display(resolution, FPS)
 
-		for i in range(iterations):
+		self.grid.draw_grid = draw_grid
+		self.grid.max_value = len(rule)
+
+		i = 0
+		while i != iterations:
 			self.display.tick()
-			if (i % int(FPS/5) == 0 or draw_every_frame):
+			if (i % math.ceil(FPS/5) == 0 or draw_every_frame):
 				self.display.surface.fill((255,255,255))
 				grid_surface = self.grid.get_grid_surface(self.pos)
 				pg.transform.scale(grid_surface, resolution, self.display.surface)
@@ -169,11 +174,11 @@ class Ant:
 
 			self.rule(rule)
 
-			
-
 			for event in pg.event.get():
 				if event.type == pg.QUIT:
 					exit()
+			i += 1
+
 		while True:
 			for event in pg.event.get():
 				if event.type == pg.QUIT:
