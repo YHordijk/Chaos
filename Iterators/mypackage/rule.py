@@ -108,25 +108,6 @@ class ChaosGameRule(Rule2):
         self.standard_sett = ('self.A = 0.5',
                               'self.B = 0.5',)
 
-# class Ikeda(Rule2):
-#     def __init__(self, verteces=None, **kwargs):
-#         super().__init__(**kwargs)
-
-    # def set_rule(self):
-    #     self.rulevars = ('x', 'y', 'u')
-    #     self.equations = ('self.t = 0.4 - 6/(1+self.x**2+self.y**2)',
-    #                      'self.x = 1+self.u*(self.x*cos(self.t)-self.y*(sin(self.t)))',
-    #                      'self.y = self.u*(self.x*sin(self.t)+self.y*(cos(self.t)))')
-    #     self.standard_sett = ('self.rangex = (-10, 10)',
-    #                           'self.rangey = (-10, 10)',
-    #                           'self.u = 0.85')
-    #     self.explanation = 'Ikeda map'
-
-
-
-
-
-
 
 class Rule3:
     def __init__(self, **kwargs):
@@ -142,8 +123,6 @@ class Rule3:
             for eq in self.equations:
                 exec(eq)
             pos.append((self.x, self.y))
-
-
         return pos
 
 

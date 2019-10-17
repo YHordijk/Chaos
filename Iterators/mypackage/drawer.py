@@ -1,3 +1,5 @@
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg
 import numpy as np
 from math import cos, sin, pi
@@ -13,7 +15,7 @@ class Screen:
         self.rangey = rangey
         self._bkgr_colour = bkgr_colour
         self._draw_colour = draw_colour
-        self.draw_opacity_steps = min(255, draw_opacity_steps)
+        self.draw_opacity_steps = draw_opacity_steps
         self.set_draw_colour_grad()
 
     def set_draw_colour_grad(self):
@@ -24,6 +26,14 @@ class Screen:
 
         self.draw_colour_grad = [tuple((np.asarray(c.rgb)*255).astype(int)) for c in range]
         self.draw_colour_grad[0] = self.bkgr_colour
+        a = len(self.draw_colour_grad)
+        self.draw_colour_grad = list(sorted(set(self.draw_colour_grad), key=self.draw_colour_grad.index))
+        b = len(self.draw_colour_grad)
+        if not a == b:
+            print(f'Could only generate colour gradient of length {b}, instead of required {a}.')
+
+    def clear(self):
+        self.disp.fill(self.bkgr_colour)
 
     @property 
     def bkgr_colour(self):
@@ -93,28 +103,8 @@ class Screen:
                       keepon = False
 
     def save(self, path):
-        pg.image.save(self.disp, "C:\\Users\\Yuman\\Desktop\\Programmeren\\Python\\PyGame\\Chaos\\ikeda frames\\hires2-{}.png".format(k))
+        pg.image.save(self.disp, path)
 
-# def draw_pixel(disp, x, y, colour, rangex, rangey, size, rot=None):
-#     x, y = transform_range(x, y, rangex, rangey, size)
-#     if rot is not None:
-#         x, y = rotate(x, y, rot, size)
-#     if len(coloru) == 4:
-
-#         a = colour[3]
-#         try:
-#             colour = disp.get_at((x,y))
-#             c1 = max(colour[0]-a, 0)
-#             c2 = max(colour[1]-a, 0)
-#             c3 = max(colour[2]-a, 0)
-
-#             colour = (c1, c2, c3)
-#         except:
-#             pass
-        
-    
-#     disp.set_at((x,y), colour)
-#     return x, y
 
 def draw_line(disp, oldx, oldy, x, y, color, rangex, rangey, size, aa=False, rot=None):
     oldx, oldy = transform_range(oldx, oldy, rangex, rangey, size)
