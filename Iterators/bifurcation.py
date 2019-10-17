@@ -7,7 +7,7 @@ from math import pi
 pygame.init()
 
 #setup
-SIZE = WIDTH, HEIGHT = 800, 450
+SIZE = WIDTH, HEIGHT = 1600, 900
 disp = pygame.display.set_mode(SIZE)
 disp.fill((255,255,255))
 

@@ -1,3 +1,5 @@
+import math
+
 class Rule2:
     def __init__(self, rule):
         self.rule = rule
@@ -43,7 +45,7 @@ class Rule2:
                              'self.y = self.x*self.y*(1-self.y)')
             self.standard_sett = ('self.rangex = (2.4, 4)',
                                   'self.rangey = (0, 1)')
-            self.explanation = 'Standard bifurcation, logistic map. Iterates over '
+            self.explanation = 'Standard bifurcation, logistic map.'
             
         if self.rule == 2:
             self.rulevars = ('x', 'y', 'u')
@@ -93,16 +95,69 @@ class Rule2:
                                   'self.d = 0.5')
                                 
 class ChaosGameRule(Rule2):
-  def __init__(self, verteces=None, **kwargs):
-    super().__init__(**kwargs)
-    self.verteces =  verteces
+    def __init__(self, verteces=None, **kwargs):
+        super().__init__(**kwargs)
+        self.verteces =  verteces
 
-  def set_rule(self):
-    from random import randrange
-    if self.rule == 1:
-      self.nextvert = self.verteces[randrange(0, len(self.verteces))]
-      self.rulevars = ('x', 'y', 'A', 'B')
-      self.equations = ('self.x = (self.nextvert[0] + self.x)/self.A',
-                        'self.y = (self.nextvert[1] + self.y)/self.B')
-      self.standard_sett = ('self.A = 0.5',
-                            'self.B = 0.5',)
+    def set_rule(self):
+        from random import randrange
+        self.nextvert = self.verteces[randrange(0, len(self.verteces))]
+        self.rulevars = ('x', 'y', 'A', 'B')
+        self.equations = ('self.x = (self.nextvert[0] + self.x)/self.A',
+                          'self.y = (self.nextvert[1] + self.y)/self.B')
+        self.standard_sett = ('self.A = 0.5',
+                              'self.B = 0.5',)
+
+# class Ikeda(Rule2):
+#     def __init__(self, verteces=None, **kwargs):
+#         super().__init__(**kwargs)
+
+    # def set_rule(self):
+    #     self.rulevars = ('x', 'y', 'u')
+    #     self.equations = ('self.t = 0.4 - 6/(1+self.x**2+self.y**2)',
+    #                      'self.x = 1+self.u*(self.x*cos(self.t)-self.y*(sin(self.t)))',
+    #                      'self.y = self.u*(self.x*sin(self.t)+self.y*(cos(self.t)))')
+    #     self.standard_sett = ('self.rangex = (-10, 10)',
+    #                           'self.rangey = (-10, 10)',
+    #                           'self.u = 0.85')
+    #     self.explanation = 'Ikeda map'
+
+
+
+
+
+
+
+class Rule3:
+    def __init__(self, **kwargs):
+        self.set_rule()
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+    def iterate(self, start_pos, iterations):
+        self.x, self.y = start_pos
+        pos = []
+        for i in range(iterations):
+            for eq in self.equations:
+                exec(eq)
+            pos.append((self.x, self.y))
+
+
+        return pos
+
+
+class Ikeda(Rule3):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def set_rule(self):
+        self.vars = ['x', 'y', 'u']
+        self.equations = ['self.t = 0.4 - 6/(1+self.x**2+self.y**2)',
+                          'self.x = 1 + self.u * (self.x*math.cos(self.t)-self.y*(math.sin(self.t)))',
+                          'self.y = self.u*(self.x*math.sin(self.t)+self.y*(math.cos(self.t)))']
+        self.suggested_space = ['rangex = (-10, 10)',
+                                'rangey = (-10, 10)']
+        self.explanation = 'Ikeda map, variable u. For u > 0.6 it has an attractor. Starting point may be anything.'
+
+        self.u = 0.85
