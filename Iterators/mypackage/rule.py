@@ -1,3 +1,7 @@
+import math
+import numpy as np
+import re
+
 class Rule2:
     def __init__(self, rule):
         self.rule = rule
@@ -43,7 +47,7 @@ class Rule2:
                              'self.y = self.x*self.y*(1-self.y)')
             self.standard_sett = ('self.rangex = (2.4, 4)',
                                   'self.rangey = (0, 1)')
-            self.explanation = 'Standard bifurcation, logistic map. Iterates over '
+            self.explanation = 'Standard bifurcation, logistic map.'
             
         if self.rule == 2:
             self.rulevars = ('x', 'y', 'u')
@@ -93,16 +97,78 @@ class Rule2:
                                   'self.d = 0.5')
                                 
 class ChaosGameRule(Rule2):
-  def __init__(self, verteces=None, **kwargs):
-    super().__init__(**kwargs)
-    self.verteces =  verteces
+    def __init__(self, verteces=None, **kwargs):
+        super().__init__(**kwargs)
+        self.verteces =  verteces
 
-  def set_rule(self):
-    from random import randrange
-    if self.rule == 1:
-      self.nextvert = self.verteces[randrange(0, len(self.verteces))]
-      self.rulevars = ('x', 'y', 'A', 'B')
-      self.equations = ('self.x = (self.nextvert[0] + self.x)/self.A',
-                        'self.y = (self.nextvert[1] + self.y)/self.B')
-      self.standard_sett = ('self.A = 0.5',
-                            'self.B = 0.5',)
+    def set_rule(self):
+        from random import randrange
+        self.nextvert = self.verteces[randrange(0, len(self.verteces))]
+        self.rulevars = ('x', 'y', 'A', 'B')
+        self.equations = ('self.x = (self.nextvert[0] + self.x)/self.A',
+                          'self.y = (self.nextvert[1] + self.y)/self.B')
+        self.standard_sett = ('self.A = 0.5',
+                              'self.B = 0.5',)
+
+
+class Rule3:
+    def __init__(self, **kwargs):
+        self.vector_equations = None
+        self.set_rule()
+        self.vectorize_equations()
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.parse_list = [['math.cos', 'np.cos'],
+                           ['math.sin', 'np.sin'],
+                           ['pow', 'np.power']]
+
+    def vectorize_equations(self):
+        if self.vector_equations == None:
+            self.vector_equations = []
+            for eq in self.equations:
+                for p in self.parse_list:
+                    eq = eq.replace(p[0], p[1])
+                self.vector_equations.append(eq)
+
+    def iterate(self, start_pos, iterations):
+        self.x, self.y = start_pos
+        
+        pos = []
+        for i in range(iterations):
+            for eq in self.equations:
+                exec(eq)
+            pos.append((self.x, self.y))
+        return pos
+
+    def iterate_vector(self, start_pos_list, iterations):
+        self.x, self.y = np.array_split(start_pos_list, 2, axis=1)
+
+        pos = np.array([[],])
+        for i in range(iterations):
+            for eq in self.vector_equations:
+                exec(eq)
+            np.append(pos, np.array([[self.x, self.y]]), axis=0)
+        return pos
+
+
+
+class Ikeda(Rule3):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def set_rule(self):
+        self.vars = ['x', 'y', 'u']
+        self.equations = ['self.t = 0.4 - 6 / (1 + pow(self.x,2) + pow(self.y,2))',
+                          'self.x = 1 + self.u * (self.x*math.cos(self.t)-self.y*(math.sin(self.t)))',
+                          'self.y = self.u*(self.x*math.sin(self.t)+self.y*(math.cos(self.t)))']
+
+        self.vector_equations = ['self.t = 0.4 - 6 / (1 + np.square(self.x) + np.square(self.y))',
+                                 'self.x = 1 + self.u * (self.x * np.cos(self.t) - self.y * np.sin(self.t))',
+                                 'self.y = self.u * (self.x * np.sin(self.t) + self.y * np.cos(self.t))']
+        self.suggested_space = ['rangex = (-10, 10)',
+                                'rangey = (-10, 10)']
+        self.explanation = 'Ikeda map, variable u. For u > 0.6 it has an attractor. Starting point may be anything.'
+
+        self.u = 0.85
