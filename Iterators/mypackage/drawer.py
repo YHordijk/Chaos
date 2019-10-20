@@ -6,7 +6,7 @@ from math import cos, sin, pi
 import colour as clr
 
 class Screen:
-    def __init__(self, size, rangex, rangey, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=10):
+    def __init__(self, size, rangex, rangey, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=1):
         self.disp = pg.surface.Surface(size)
         self.disp.fill(bkgr_colour)
         # self.disp = pg.display.set_mode(size)
@@ -19,18 +19,22 @@ class Screen:
         self.set_draw_colour_grad()
 
     def set_draw_colour_grad(self):
-        c1 = clr.Color(rgb=list(np.asarray(self._bkgr_colour)/255))
-        c2 = clr.Color(rgb=list(np.asarray(self._draw_colour)/255))
+        if self.draw_opacity_steps > 1:
+            c1 = clr.Color(rgb=list(np.asarray(self._bkgr_colour)/255))
+            c2 = clr.Color(rgb=list(np.asarray(self._draw_colour)/255))
 
-        range = list(c1.range_to(c2, self.draw_opacity_steps))
+            range = list(c1.range_to(c2, self.draw_opacity_steps))
 
-        self.draw_colour_grad = [tuple((np.asarray(c.rgb)*255).astype(int)) for c in range]
-        self.draw_colour_grad[0] = self.bkgr_colour
-        a = len(self.draw_colour_grad)
-        self.draw_colour_grad = list(sorted(set(self.draw_colour_grad), key=self.draw_colour_grad.index))
-        b = len(self.draw_colour_grad)
-        if not a == b:
-            print(f'Could only generate colour gradient of length {b}, instead of required {a}.')
+            self.draw_colour_grad = [tuple((np.asarray(c.rgb)*255).astype(int)) for c in range]
+            self.draw_colour_grad[0] = self.bkgr_colour
+            a = len(self.draw_colour_grad)
+            self.draw_colour_grad = list(sorted(set(self.draw_colour_grad), key=self.draw_colour_grad.index))
+            b = len(self.draw_colour_grad)
+            if not a == b:
+                print(f'Could only generate colour gradient of length {b}, instead of required {a}.')
+        else:
+            self.draw_colour_grad = [self._bkgr_colour, self._draw_colour]
+
 
     def clear(self):
         self.disp.fill(self.bkgr_colour)
@@ -62,7 +66,7 @@ class Screen:
                 x, y = self.rotate(x, y, rot, size)
 
             colour = self.disp.get_at((x,y))
-            index = min(self.draw_colour_grad.index(colour) + 1, self.draw_opacity_steps - 1)
+            index = min(self.draw_colour_grad.index(colour) + 1, self.draw_opacity_steps)
             colour = self.draw_colour_grad[index]
 
             self.disp.set_at((x,y), colour)
@@ -104,6 +108,12 @@ class Screen:
 
     def save(self, path):
         pg.image.save(self.disp, path)
+
+    def draw_line(self, points, colour):
+        p1 = self.transform_range(points[0])
+        p2 = self.transform_range(points[1])
+        pg.draw.line(self.disp, colour, p1, p2)
+
 
 
 def draw_line(disp, oldx, oldy, x, y, color, rangex, rangey, size, aa=False, rot=None):

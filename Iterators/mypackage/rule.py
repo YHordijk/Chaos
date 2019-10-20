@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import re
+import random
 
 class Rule2:
     def __init__(self, rule):
@@ -112,17 +113,20 @@ class ChaosGameRule(Rule2):
 
 
 class Rule3:
-    def __init__(self, **kwargs):
+    def __init__(self, plot_on_screen=False, screen=None, **kwargs):
+        self.plot_on_screen = plot_on_screen
+        self.screen = screen
         self.vector_equations = None
+        self.parse_list = [['math.cos', 'np.cos'],
+                           ['math.sin', 'np.sin'],
+                           ['pow', 'np.power']]
         self.set_rule()
         self.vectorize_equations()
 
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.parse_list = [['math.cos', 'np.cos'],
-                           ['math.sin', 'np.sin'],
-                           ['pow', 'np.power']]
+        
 
     def vectorize_equations(self):
         if self.vector_equations == None:
@@ -132,7 +136,7 @@ class Rule3:
                     eq = eq.replace(p[0], p[1])
                 self.vector_equations.append(eq)
 
-    def iterate(self, start_pos, iterations, plot_on_screen=True, screen=None):
+    def iterate(self, start_pos, iterations):
         self.x, self.y = start_pos
         
         pos = []
@@ -141,10 +145,10 @@ class Rule3:
                 exec(eq)
             pos.append((self.x, self.y))
 
-        if plot_on_screen:
-            if screen is not None:
+        if self.plot_on_screen:
+            if self.screen is not None:
                 for p in pos:
-                    screen.draw_pixel(p)
+                    self.screen.draw_pixel(p)
             else:
                 print('Error: please supply drawer.screen object.')
                 return pos
@@ -160,6 +164,12 @@ class Rule3:
                 exec(eq)
             np.append(pos, np.array([[self.x, self.y]]), axis=0)
         return pos
+
+    def check_screen(self):
+        if self.plot_on_screen:
+            if self.screen is None:
+                print('Error: to plot on screen, please supply drawer.screen object.')
+                return
 
 
 
@@ -183,5 +193,81 @@ class Ikeda(Rule3):
         self.u = 0.85
 
 class ChaosGame(Rule3):
-    def __init__(self, verteces, **kwargs):
+    def __init__(self, vertices=None, rule_variant=0, **kwargs):
+        self.rule_variant = rule_variant
+        self.vertices = vertices
         super().__init__(**kwargs)
+        
+
+    def generate_vertices(self, nmbr_vertices, radius, rotation=None):
+        if rotation == None:
+            rotation = 0.5 * 360/nmbr_vertices
+        vertices = []
+        for i in range(nmbr_vertices):
+            rotation += 360/(nmbr_vertices)
+            vertices.append((math.cos(math.radians(rotation)) * radius, math.sin(math.radians(rotation)) * radius))
+
+        self.vertices = vertices
+        return vertices
+
+    def draw_vertices(self, colour=(255,255,255)):
+        self.check_screen()
+        for i in range(len(self.vertices)):
+            self.screen.draw_line((self.vertices[i], self.vertices[(i+1)%len(self.vertices)]), colour)
+
+    def set_rule(self):
+        if self.rule_variant == 0:
+            self.vars = ['x', 'y', 'A', 'B']
+            self.equations = ('self.nextvert = random.choice(self.vertices)',
+                              'self.x = (self.nextvert[0] + self.x)*self.A',
+                              'self.y = (self.nextvert[1] + self.y)*self.B')
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where any vertex may be chosen. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
+        if self.rule_variant == 1:
+            self.vars = ['x', 'y', 'A', 'B']
+            self.nextvert = random.choice(self.vertices)
+            self.equations = (
+'''
+nextnextvert = random.choice(self.vertices)
+while self.nextvert == nextnextvert:
+    nextnextvert = random.choice(self.vertices)
+self.nextvert = nextnextvert
+
+''',
+                              'self.x = (self.nextvert[0] + self.x)*self.A',
+                              'self.y = (self.nextvert[1] + self.y)*self.B')
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where vertices may not be chosen two times in the row. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
+        if self.rule_variant == 2:
+            self.vars = ['x', 'y', 'A', 'B']
+            # self.vert_history.append(random.choice(self.vertices))
+            self.nextvert = random.choice(self.vertices)
+            self.equations = (
+'''
+a = self.vertices.index(self.nextvert)
+nextnextvert = random.choice(self.vertices)
+b = self.vertices.index(nextnextvert)
+while (b - a)%(len(self.vertices)) == 2 or (a - b)%(len(self.vertices)) == 2:
+    nextnextvert = random.choice(self.vertices)
+    b = self.vertices.index(nextnextvert)
+# print(a,b, (b - a)%(len(self.vertices)- 1), (a - b)%(len(self.vertices)- 1))
+self.nextvert = nextnextvert
+
+''',
+                              'self.x = (self.nextvert[0] + self.x)*self.A',
+                              'self.y = (self.nextvert[1] + self.y)*self.B')
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where next vertex may not be two spaces away from last vertex. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
+
