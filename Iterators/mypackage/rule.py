@@ -132,7 +132,7 @@ class Rule3:
                     eq = eq.replace(p[0], p[1])
                 self.vector_equations.append(eq)
 
-    def iterate(self, start_pos, iterations):
+    def iterate(self, start_pos, iterations, plot_on_screen=True, screen=None):
         self.x, self.y = start_pos
         
         pos = []
@@ -140,9 +140,18 @@ class Rule3:
             for eq in self.equations:
                 exec(eq)
             pos.append((self.x, self.y))
-        return pos
 
-    def iterate_vector(self, start_pos_list, iterations):
+        if plot_on_screen:
+            if screen is not None:
+                for p in pos:
+                    screen.draw_pixel(p)
+            else:
+                print('Error: please supply drawer.screen object.')
+                return pos
+        else:
+            return pos
+
+    def iterate_vector(self, start_pos_list, iterations, plot_on_screen=True, screen=None):
         self.x, self.y = np.array_split(start_pos_list, 2, axis=1)
 
         pos = np.array([[],])
@@ -172,3 +181,7 @@ class Ikeda(Rule3):
         self.explanation = 'Ikeda map, variable u. For u > 0.6 it has an attractor. Starting point may be anything.'
 
         self.u = 0.85
+
+class ChaosGame(Rule3):
+    def __init__(self, verteces, **kwargs):
+        super().__init__(**kwargs)
