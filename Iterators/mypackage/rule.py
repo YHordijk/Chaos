@@ -141,8 +141,11 @@ class Rule3:
         
         pos = []
         for i in range(iterations):
-            for eq in self.equations:
-                exec(eq)
+            if type(self.equations) is list or type(self.equations) is tuple:
+                for eq in self.equations:
+                    exec(eq)
+            else:
+                exec(self.equations)
             if i > iter_skip:
                 pos.append((self.x, self.y))
 
@@ -198,6 +201,7 @@ class ChaosGame(Rule3):
     def __init__(self, vertices=None, rule_variant=0, **kwargs):
         self.rule_variant = rule_variant
         self.vertices = vertices
+        
         super().__init__(**kwargs)
 
     @property
@@ -209,8 +213,6 @@ class ChaosGame(Rule3):
         self._rule_variant = val
         self.set_rule()
     
-        
-
     def generate_vertices(self, nmbr_vertices, radius, rotation=None):
         if rotation == None:
             rotation = 0.5 * 360/nmbr_vertices
@@ -220,12 +222,25 @@ class ChaosGame(Rule3):
             vertices.append((math.cos(math.radians(rotation)) * radius, math.sin(math.radians(rotation)) * radius))
 
         self.vertices = vertices
+        self.vert_history = [0,1,2,3,4]
+        vertex_probs = np.random.rand(len(self.vertices))
+        vertex_probs = vertex_probs / np.sum(vertex_probs)
+        self.vertex_probs = vertex_probs.tolist()
         return vertices
 
     def draw_vertices(self, colour=(255,255,255)):
         self.check_screen()
         for i in range(len(self.vertices)):
             self.screen.draw_line((self.vertices[i], self.vertices[(i+1)%len(self.vertices)]), colour)
+
+    def choose_vertex(self):
+        nextvert = random.choice(self.vertices)
+        return nextvert
+
+    def add_vert_to_history(self):
+        self.vert_history.append(self.nextvert)
+        if len(self.vert_history) > 5:
+            del(self.vert_history[0])
 
     def set_rule(self):
         if self.rule_variant == 0:
@@ -241,17 +256,16 @@ class ChaosGame(Rule3):
 
         if self.rule_variant == 1:
             self.vars = ['x', 'y', 'A', 'B']
-            self.nextvert = random.choice(self.vertices)
+            self.nextvert = self.choose_vertex()
             self.equations = (
 '''
-nextnextvert = random.choice(self.vertices)
+nextnextvert = self.choose_vertex()
 while self.nextvert == nextnextvert:
-    nextnextvert = random.choice(self.vertices)
+    nextnextvert = self.choose_vertex()
 self.nextvert = nextnextvert
-
-''',
-                              'self.x = (self.nextvert[0] + self.x)*self.A',
-                              'self.y = (self.nextvert[1] + self.y)*self.B')
+self.x = (self.nextvert[0] + self.x)*self.A
+self.y = (self.nextvert[1] + self.y)*self.B
+''')
             self.vector_equations = None
             self.suggested_space = None
             self.explanation = 'Rule variant on chaos game where vertices may not be chosen two times in the row. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
@@ -261,23 +275,84 @@ self.nextvert = nextnextvert
         if self.rule_variant == 2:
             self.vars = ['x', 'y', 'A', 'B']
             # self.vert_history.append(random.choice(self.vertices))
-            self.nextvert = random.choice(self.vertices)
+            self.nextvert = self.choose_vertex()
             self.equations = (
 '''
 a = self.vertices.index(self.nextvert)
-nextnextvert = random.choice(self.vertices)
+nextnextvert = self.choose_vertex()
 b = self.vertices.index(nextnextvert)
 while (b - a)%(len(self.vertices)) == 2 or (a - b)%(len(self.vertices)) == 2:
-    nextnextvert = random.choice(self.vertices)
+    nextnextvert = self.choose_vertex()
     b = self.vertices.index(nextnextvert)
 self.nextvert = nextnextvert
-''',
-                              'self.x = (self.nextvert[0] + self.x)*self.A',
-                              'self.y = (self.nextvert[1] + self.y)*self.B')
+self.x = (self.nextvert[0] + self.x)*self.A
+self.y = (self.nextvert[1] + self.y)*self.B
+''')
             self.vector_equations = None
             self.suggested_space = None
             self.explanation = 'Rule variant on chaos game where next vertex may not be two spaces away from last vertex. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
             self.A = 0.5
             self.B = 0.5
+
+        if self.rule_variant == 3:
+            self.vars = ['x', 'y', 'A', 'B']
+            # self.vert_history.append(random.choice(self.vertices))
+            self.nextvert = self.choose_vertex()
+            self.equations = (
+'''
+a = self.vertices.index(self.nextvert)
+nextnextvert = self.choose_vertex()
+b = self.vertices.index(nextnextvert)
+while (a - b)%(len(self.vertices)) == 1:
+    nextnextvert = self.choose_vertex()
+    b = self.vertices.index(nextnextvert)
+self.nextvert = nextnextvert
+self.x = (self.nextvert[0] + self.x)*self.A
+self.y = (self.nextvert[1] + self.y)*self.B
+''')
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where next vertex may not be one space away (counter-clockwise) from last vertex. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
+        if self.rule_variant == 4:
+            self.vars = ['x', 'y', 'A', 'B']
+            # self.vert_history.append(random.choice(self.vertices))
+            self.nextvert = self.choose_vertex()
+            self.equations = (
+'''
+a = self.vertices.index(self.nextvert)
+nextnextvert = self.choose_vertex()
+b = self.vertices.index(nextnextvert)
+if self.vert_history[-1] == self.nextvert:
+    while (a - b)%(len(self.vertices)) == 1 or (b - a)%(len(self.vertices)):
+        nextnextvert = self.choose_vertex()
+        b = self.vertices.index(nextnextvert)
+    self.nextvert = nextnextvert
+self.x = (self.nextvert[0] + self.x)*self.A
+self.y = (self.nextvert[1] + self.y)*self.B
+''')
+            self.add_vert_to_history()
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where next vertex may not be one space away from last vertex if last two chosen vertices are the same. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
+        if self.rule_variant == 5:
+            self.vars = ['x', 'y', 'A', 'B']
+            self.nextvert = self.choose_vertex()
+            self.equations = ('j = random.choices(list(range(len(self.vertices))), weights=self.vertex_probs)[0]',
+                              'self.nextvert = self.vertices[j]',
+                              'self.x = (self.nextvert[0] + self.x)*self.A',
+                              'self.y = (self.nextvert[1] + self.y)*self.B')
+            self.add_vert_to_history()
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where next vertex may not be one space away from last vertex if last two chosen vertices are the same. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
+
 
 
