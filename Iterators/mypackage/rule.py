@@ -327,7 +327,7 @@ self.nextvert = self.choose_vertex()
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
 if self.p2vert == self.p1vert:
-    while abs(a - b)%(len(self.vertices)) == 1:
+    while (b - a)%(len(self.vertices)) == 1 or (a - b)%(len(self.vertices)) == 1:
         self.nextvert = self.choose_vertex()
         a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A
@@ -368,7 +368,7 @@ self.nextvert = self.choose_vertex()
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
 if self.p2vert == self.p1vert:
-    while abs(a - b)%(len(self.vertices)) != 1:
+    while (b - a)%(len(self.vertices)) != 1 or (a - b)%(len(self.vertices)) != 1:
         self.nextvert = self.choose_vertex()
         a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A
