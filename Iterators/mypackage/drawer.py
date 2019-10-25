@@ -59,26 +59,41 @@ class Screen:
         self.set_draw_colour_grad()
         return self._draw_colour
 
-    def draw_pixel(self, pos, rot=None):
-        try:
-            x, y = self.transform_range(pos)
-            if rot is not None:
-                x, y = self.rotate(x, y, rot, size)
+    def draw_pixel(self, pos, rot=None, mandelbrot=False):
+        if not mandelbrot:
+            try:
+                x, y = self.transform_to_disp(pos)
+                if rot is not None:
+                    x, y = self.rotate(x, y, rot, size)
 
-            colour = self.disp.get_at((x,y))
-            index = min(self.draw_colour_grad.index(colour) + 1, self.draw_opacity_steps)
-            colour = self.draw_colour_grad[index]
+                colour = self.disp.get_at((x,y))
+                index = min(self.draw_colour_grad.index(colour) + 1, self.draw_opacity_steps)
+                colour = self.draw_colour_grad[index]
 
-            self.disp.set_at((x,y), colour)
-        except:
-            pass
+                self.disp.set_at((x,y), colour)
+            except:
+                pass
+        else:
+            try:
+                x, y, k = pos
+                round(k * len(self.draw_colour_grad))
+                colour = self.draw_colour_grad[int(round(k * len(self.draw_colour_grad)))]
+
+                self.disp.set_at((x,y), colour)
+            except:
+                pass
 
     def draw_pixels(self, poss, rot=None):
         for pos in poss:
             self.draw_pixel(pos, rot)
 
+    def transform_to_range(self, pos):
+        x, y = pos[0], pos[1]
+        x = x*(self.rangex[1]-self.rangex[0]) / self.size[0] + self.rangex[0]
+        y = y*(self.rangey[1]-self.rangey[0]) / self.size[1] + self.rangey[0]
+        return x, y
 
-    def transform_range(self, pos):
+    def transform_to_disp(self, pos):
         #takes position in rangex, rangey and outputs position on size
         x, y = pos[0], pos[1]
         x = round((x - self.rangex[0])*self.size[0]/(self.rangex[1]-self.rangex[0]))
@@ -110,15 +125,15 @@ class Screen:
         pg.image.save(self.disp, path)
 
     def draw_line(self, points, colour):
-        p1 = self.transform_range(points[0])
-        p2 = self.transform_range(points[1])
+        p1 = self.transform_to_disp(points[0])
+        p2 = self.transform_to_disp(points[1])
         pg.draw.line(self.disp, colour, p1, p2)
 
 
 
 def draw_line(disp, oldx, oldy, x, y, color, rangex, rangey, size, aa=False, rot=None):
-    oldx, oldy = transform_range(oldx, oldy, rangex, rangey, size)
-    x, y = transform_range(x, y, rangex, rangey, size)
+    oldx, oldy = transform_to_disp(oldx, oldy, rangex, rangey, size)
+    x, y = transform_to_disp(x, y, rangex, rangey, size)
     if rot is not None:
         x, y = rotate(x, y, rot)
     if aa:

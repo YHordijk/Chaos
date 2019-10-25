@@ -177,6 +177,40 @@ class Rule3:
                 return
 
 
+class Mandelbrot(Rule3):
+    def __init__(self, **kwargs):
+        self.epsilon = 10**-5
+        self.max_iters = 1000
+        super().__init__(**kwargs)
+
+    def start(self):
+        for i in range(self.screen.size[0]):
+            for j in range(self.screen.size[1]):
+                self.z = complex(0,0)
+                self.c = complex(*self.screen.transform_to_range((i,j)))
+
+                k = 0
+                delta = 2 * self.epsilon
+                keep_going = True
+                while delta > self.epsilon and k < self.max_iters and keep_going:
+                    k += 1
+                    try:
+                        # new_z = (abs(self.z.real) + abs(self.z.imag))**2 + self.c
+                        new_z = self.z**2 + self.c
+                        delta = abs(self.z - new_z)
+                        self.z = new_z
+                    except OverflowError:
+                        keep_going = False
+                
+
+                if k < self.max_iters and keep_going:
+                    self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
+                    # self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
+
+    def set_rule(self):
+        self.vars = ['x', 'y', 'c', 'd']
+        self.equations = []
+
 
 class Ikeda(Rule3):
     def __init__(self, **kwargs):
@@ -368,7 +402,7 @@ self.nextvert = self.choose_vertex()
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
 if self.p2vert == self.p1vert:
-    while (b - a)%(len(self.vertices)) == 1 or (a - b)%(len(self.vertices)) != 1:
+    while (b - a)%(len(self.vertices)) != 1 or (a - b)%(len(self.vertices)) != 1:
         self.nextvert = self.choose_vertex()
         a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A

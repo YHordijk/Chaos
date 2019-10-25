@@ -8,7 +8,7 @@ rangex = (-1, 1)
 rangey = (-1, 1)
 screen = draw.Screen((600, 600), rangex, rangey, draw_opacity_steps=5, bkgr_colour=(255,255,255), draw_colour=(0,0,0))
 rule = rule.ChaosGame(screen=screen, plot_on_screen=True)
-rule.generate_vertices(5, 1)
+rule.generate_vertices(3, 1)
 rule.rule_variant = 4
 
 iters = 100000
