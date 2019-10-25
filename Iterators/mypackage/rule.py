@@ -141,11 +141,12 @@ class Rule3:
         
         pos = []
         for i in range(iterations):
-            if type(self.equations) is list or type(self.equations) is tuple:
+            if type(self.equations) is str:
+                exec(self.equations)
+            else:
                 for eq in self.equations:
                     exec(eq)
-            else:
-                exec(self.equations)
+                
             if i > iter_skip:
                 pos.append((self.x, self.y))
 
@@ -201,7 +202,6 @@ class ChaosGame(Rule3):
     def __init__(self, vertices=None, rule_variant=0, **kwargs):
         self.rule_variant = rule_variant
         self.vertices = vertices
-        
         super().__init__(**kwargs)
 
     @property
@@ -226,9 +226,13 @@ class ChaosGame(Rule3):
         vertex_probs = np.random.rand(len(self.vertices))
         vertex_probs = vertex_probs / np.sum(vertex_probs)
         self.vertex_probs = vertex_probs.tolist()
+
+        self.p1vert = self.vertices[0]
+        self.p2vert = self.vertices[1]
         return vertices
 
     def draw_vertices(self, colour=(255,255,255)):
+        colour = self.screen._draw_colour
         self.check_screen()
         for i in range(len(self.vertices)):
             self.screen.draw_line((self.vertices[i], self.vertices[(i+1)%len(self.vertices)]), colour)
@@ -318,20 +322,22 @@ self.y = (self.nextvert[1] + self.y)*self.B
 
         if self.rule_variant == 4:
             self.vars = ['x', 'y', 'A', 'B']
-            # self.vert_history.append(random.choice(self.vertices))
             self.nextvert = self.choose_vertex()
             self.equations = (
 '''
 a = self.vertices.index(self.nextvert)
+b = self.vertices.index(self.p1vert)
 nextnextvert = self.choose_vertex()
-b = self.vertices.index(nextnextvert)
-if self.vert_history[-1] == self.nextvert:
-    while (a - b)%(len(self.vertices)) == 1 or (b - a)%(len(self.vertices)):
+if self.p2vert == self.p1vert:
+    while abs(a - b)%(len(self.vertices)) <= 1:
         nextnextvert = self.choose_vertex()
         b = self.vertices.index(nextnextvert)
     self.nextvert = nextnextvert
 self.x = (self.nextvert[0] + self.x)*self.A
 self.y = (self.nextvert[1] + self.y)*self.B
+
+self.p2vert = self.p1vert
+self.p1vert = self.nextvert
 ''')
             self.add_vert_to_history()
             self.vector_equations = None
@@ -350,9 +356,28 @@ self.y = (self.nextvert[1] + self.y)*self.B
             self.add_vert_to_history()
             self.vector_equations = None
             self.suggested_space = None
-            self.explanation = 'Rule variant on chaos game where next vertex may not be one space away from last vertex if last two chosen vertices are the same. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.explanation = 'Rule variant on chaos game where the choice of the next vertex is weighted via self.vertex_probs. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
             self.A = 0.5
             self.B = 0.5
+
+        if self.rule_variant == 6:
+            self.vars = ['x', 'y', 'A', 'B']
+            self.nextvert = self.choose_vertex()
+            self.equations = (
+'''
+a = self.vertices.index(self.nextvert)
+b = self.vertices.index(self.p1vert)
+nextnextvert = self.choose_vertex()
+if self.nextvert == self.p1vert:
+    while abs(a - b)%(len(self.vertices)) == 1:
+        nextnextvert = self.choose_vertex()
+        b = self.vertices.index(nextnextvert)
+    self.nextvert = nextnextvert
+self.x = (self.nextvert[0] + self.x)*self.A
+self.y = (self.nextvert[1] + self.y)*self.B
+
+self.p1vert = self.nextvert
+''')
 
 
 
