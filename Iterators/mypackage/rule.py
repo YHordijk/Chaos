@@ -238,8 +238,7 @@ class ChaosGame(Rule3):
             self.screen.draw_line((self.vertices[i], self.vertices[(i+1)%len(self.vertices)]), colour)
 
     def choose_vertex(self):
-        nextvert = random.choice(self.vertices)
-        return nextvert
+        return random.choice(self.vertices)
 
     def add_vert_to_history(self):
         self.vert_history.append(self.nextvert)
@@ -327,19 +326,18 @@ self.y = (self.nextvert[1] + self.y)*self.B
 '''
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
-nextnextvert = self.choose_vertex()
 if self.p2vert == self.p1vert:
-    while abs(a - b)%(len(self.vertices)) <= 1:
-        nextnextvert = self.choose_vertex()
-        b = self.vertices.index(nextnextvert)
-    self.nextvert = nextnextvert
+    while abs(a - b)%(len(self.vertices)) == 1:
+        self.nextvert = self.choose_vertex()
+        a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A
 self.y = (self.nextvert[1] + self.y)*self.B
+print(self.vertices.index(self.nextvert), self.vertices.index(self.p1vert), self.vertices.index(self.p2vert))
 
 self.p2vert = self.p1vert
 self.p1vert = self.nextvert
+
 ''')
-            self.add_vert_to_history()
             self.vector_equations = None
             self.suggested_space = None
             self.explanation = 'Rule variant on chaos game where next vertex may not be one space away from last vertex if last two chosen vertices are the same. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'

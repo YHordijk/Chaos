@@ -11,7 +11,7 @@ rule = rule.ChaosGame(screen=screen, plot_on_screen=True)
 rule.generate_vertices(4, 1)
 rule.rule_variant = 4
 
-iters = 50000
+iters = 100
 rule.iterate((0,0), iters, iter_skip=10)
 
 rule.draw_vertices()
