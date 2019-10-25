@@ -321,9 +321,9 @@ self.y = (self.nextvert[1] + self.y)*self.B
 
         if self.rule_variant == 4:
             self.vars = ['x', 'y', 'A', 'B']
-            self.nextvert = self.choose_vertex()
             self.equations = (
 '''
+self.nextvert = self.choose_vertex()
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
 if self.p2vert == self.p1vert:
@@ -332,7 +332,8 @@ if self.p2vert == self.p1vert:
         a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A
 self.y = (self.nextvert[1] + self.y)*self.B
-print(self.vertices.index(self.nextvert), self.vertices.index(self.p1vert), self.vertices.index(self.p2vert))
+
+# print(self.vertices.index(self.nextvert), self.vertices.index(self.p1vert), self.vertices.index(self.p2vert))
 
 self.p2vert = self.p1vert
 self.p1vert = self.nextvert
@@ -363,19 +364,27 @@ self.p1vert = self.nextvert
             self.nextvert = self.choose_vertex()
             self.equations = (
 '''
+self.nextvert = self.choose_vertex()
 a = self.vertices.index(self.nextvert)
 b = self.vertices.index(self.p1vert)
-nextnextvert = self.choose_vertex()
-if self.nextvert == self.p1vert:
-    while abs(a - b)%(len(self.vertices)) == 1:
-        nextnextvert = self.choose_vertex()
-        b = self.vertices.index(nextnextvert)
-    self.nextvert = nextnextvert
+if self.p2vert == self.p1vert:
+    while abs(a - b)%(len(self.vertices)) != 1:
+        self.nextvert = self.choose_vertex()
+        a = self.vertices.index(self.nextvert)
 self.x = (self.nextvert[0] + self.x)*self.A
 self.y = (self.nextvert[1] + self.y)*self.B
 
+# print(self.vertices.index(self.nextvert), self.vertices.index(self.p1vert), self.vertices.index(self.p2vert))
+
+self.p2vert = self.p1vert
 self.p1vert = self.nextvert
+
 ''')
+            self.vector_equations = None
+            self.suggested_space = None
+            self.explanation = 'Rule variant on chaos game where next vertex may only be one space away from last vertex if last two chosen vertices are the same. Change position based on distance between current position and chosen vertex multiplied by factors A and B in x and y directions respectively.'
+            self.A = 0.5
+            self.B = 0.5
 
 
 

@@ -11,12 +11,12 @@ rule = rule.ChaosGame(screen=screen, plot_on_screen=True)
 rule.generate_vertices(4, 1)
 rule.rule_variant = 4
 
-iters = 100
+iters = 100000
 rule.iterate((0,0), iters, iter_skip=10)
 
 rule.draw_vertices()
 
-# path = os.getcwd() + f'\\chaos_game_frames\\{rule.rule_variant}_{iters}.bmp'
+path = os.getcwd() + f'\\chaos_game_frames\\{rule.rule_variant}_{len(rule.vertices)}_{iters}.bmp'
 # print(path)
-# screen.save(path)
+screen.save(path)
 screen.show()
