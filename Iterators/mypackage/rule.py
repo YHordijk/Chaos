@@ -178,9 +178,10 @@ class Rule3:
 
 
 class Mandelbrot(Rule3):
-    def __init__(self, **kwargs):
+    def __init__(self, rule_variant=0, **kwargs):
         self.epsilon = 10**-7
         self.max_iters = 1000
+        self.rule_variant = rule_variant
         super().__init__(**kwargs)
 
     def start(self):
@@ -196,7 +197,7 @@ class Mandelbrot(Rule3):
                     k += 1
                     try:
                         # new_z = (abs(self.z.real) + abs(self.z.imag))**2 + self.c
-                        new_z = self.z**2 + self.c
+                        new_z = self.calc_next_z()
                         delta = abs(self.z - new_z)
                         self.z = new_z
                     except OverflowError:
@@ -207,9 +208,43 @@ class Mandelbrot(Rule3):
                     self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
                     # self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
 
+    def calc_next_z(self):
+        if self.rule_variant == 0:
+            return self.z**2 + self.c
+        if self.rule_variant == 1:
+            return complex(abs(self.z.real), abs(self.z.imag))**2 + self.c
+
     def set_rule(self):
         self.vars = ['x', 'y', 'c', 'd']
         self.equations = []
+
+
+class Julia(Mandelbrot):
+    def __init__(self, c=complex(1,1), **kwargs):
+        self.c = c
+        super().__init__(**kwargs)
+
+    def start(self):
+        for i in range(self.screen.size[0]):
+            print(f'Generating Julia plot. Current progress: {round(100 * i / self.screen.size[0])}%', end='\r')
+            for j in range(self.screen.size[1]):
+                self.z = complex(*self.screen.transform_to_range((i,j)))
+                k = 0
+                delta = 2 * self.epsilon
+                keep_going = True
+                while delta > self.epsilon and k < self.max_iters and keep_going:
+                    k += 1
+                    try:
+                        # new_z = (abs(self.z.real) + abs(self.z.imag))**2 + self.c
+                        new_z = self.calc_next_z()
+                        delta = abs(self.z - new_z)
+                        self.z = new_z
+                    except OverflowError:
+                        keep_going = False
+                
+                if k < self.max_iters and keep_going:
+                    self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
+                    # self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
 
 
 class Ikeda(Rule3):
