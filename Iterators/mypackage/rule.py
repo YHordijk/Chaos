@@ -179,16 +179,16 @@ class Rule3:
 
 class Mandelbrot(Rule3):
     def __init__(self, **kwargs):
-        self.epsilon = 10**-5
+        self.epsilon = 10**-7
         self.max_iters = 1000
         super().__init__(**kwargs)
 
     def start(self):
         for i in range(self.screen.size[0]):
+            print(f'Generating Mandelbrot plot. Current progress: {round(100 * i / self.screen.size[0])}%', end='\r')
             for j in range(self.screen.size[1]):
                 self.z = complex(0,0)
                 self.c = complex(*self.screen.transform_to_range((i,j)))
-
                 k = 0
                 delta = 2 * self.epsilon
                 keep_going = True
