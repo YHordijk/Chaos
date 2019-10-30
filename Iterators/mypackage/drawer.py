@@ -15,8 +15,19 @@ class Screen:
         self.rangey = rangey
         self._bkgr_colour = bkgr_colour
         self._draw_colour = draw_colour
-        self.draw_opacity_steps = draw_opacity_steps
+        self._draw_opacity_steps = draw_opacity_steps
         self.set_draw_colour_grad()
+
+    @property
+    def draw_opacity_steps(self):
+        return self._draw_opacity_steps
+
+    @draw_opacity_steps.setter
+    def draw_opacity_steps(self, val):
+        self._draw_opacity_steps = val
+        self.set_draw_colour_grad()
+        return self._draw_opacity_steps
+    
 
     def set_draw_colour_grad(self):
         if self.draw_opacity_steps > 1:
@@ -117,6 +128,8 @@ class Screen:
         pg.display.flip()
         keepon = True
         while keepon:
+            if pg.key.get_pressed()[pg.K_ESCAPE]:
+                keepon = False
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                       keepon = False

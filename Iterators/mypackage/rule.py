@@ -177,10 +177,42 @@ class Rule3:
                 return
 
 
+class GMAttractor(Rule3):
+    def set_rule(self):
+        self.vars = ['x', 'y', 'a', 'b']
+        self.equations = ['self.t = self.x',
+                          'self.x = self.b * self.y + self.w',
+                          'self.w = self.a*self.x + (1-self.a)*2*self.x**2/(1+self.x**2)',
+                          'self.y = self.w - self.t']
+
+        self.vector_equations = []
+        self.suggested_space = []
+        self.explanation = 'Gumowski-Mira Attractor.'
+
+        self.w = 0
+        self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
+
+
+class HLAttractor(Rule3):
+    def set_rule(self):
+        self.vars = ['x', 'y', 'a', 'b', 'c']
+        self.equations = ['self.nx = self.y - 1 - math.sqrt(abs(self.b*self.x-1-self.c))*math.copysign(1, self.x-1)',
+                          'self.y = self.a - self.x - 1',
+                          'self.x = self.nx']
+
+        self.vector_equations = []
+        self.suggested_space = []
+        self.explanation = 'Hopalong Attractor.'
+
+        self.a, self.b, self.c = random.random()*10, random.random()*10, random.random()*10
+        self.w = 0
+        # self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
+
+
 class Mandelbrot(Rule3):
     def __init__(self, rule_variant=0, **kwargs):
         self.epsilon = 10**-7
-        self.max_iters = 1000
+        self.max_iters = 400
         self.rule_variant = rule_variant
         super().__init__(**kwargs)
 
