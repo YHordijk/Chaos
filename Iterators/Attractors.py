@@ -6,45 +6,48 @@ import os
 import numpy as np
 
 #Snapshots
-def snapshots(variant=0):
+def BHsnapshots(variant=0):
 	if variant == 0:
-		rangex = (-80, 80)
-		rangey = (-80, 80)
+		attractor = rule.BHAttractor(a=0.65343, b=0.7345345)
+
+	if variant == 1:
+		attractor = rule.BHAttractor(a=-0.81, b=-0.92)
+
+	if variant == 2:
+		attractor = rule.BHAttractor(a=0.06, b=0.98)
+
+	if variant == 3:
+		attractor = rule.BHAttractor(a=-0.67, b=0.83)
+
+	path = os.getcwd() + f'\\attractor_frames\\BHAttractor_{attractor.a}_{attractor.b}.bmp'
+	screen = draw.Screen((1600, 900))
+
+	return screen, attractor, path
+
+def GMsnapshots(variant=0):
+	if variant == 0:
 		attractor = rule.GMAttractor(a=-0.31, b=1)
 		start_pos = (0,0.5)
 
 	if variant == 1:
-		rangex = (-20, 20)
-		rangey = (-20, 20)
 		attractor = rule.GMAttractor(a=-0.012, b=0.9186)
 		start_pos = (-0.61, 0.1)
 
 	if variant == 2:
-		rangex = (-15, 20)
-		rangey = (-10, 10)
 		attractor = rule.GMAttractor(a=-0.77, b=0.95)
 		start_pos = (0.1, 0.1)
 
-	screen = draw.Screen((1600, 900), rangex, rangey)
-	return screen, attractor, start_pos
+	path = os.getcwd() + f'\\attractor_frames\\GMAttractor_{attractor.a}_{attractor.b}.bmp'
+	screen = draw.Screen((1600, 900))
+
+	return screen, attractor, start_pos, path
 
 
+screen, attractor, path = BHsnapshots(3)
+screen.draw_opacity_steps = 7
 
+poss = attractor.iterate(1000000, iter_skip=1000)
+screen.draw_pixels(poss, auto_size=True)
 
-# screen, attractor, start_pos = snapshots(0)
-
-# screen.draw_opacity_steps = 7
-# screen.clear()
-# screen.draw_pixels(attractor.iterate(start_pos, 100000))
-# screen.show()
-
-rangex = (-30, 30)
-rangey = (-30, 30)
-attractor = rule.HLAttractor()
-screen = draw.Screen((1200, 720), rangex, rangey)
-screen.draw_opacity_steps = 5
-poss = attractor.iterate((0,0), 100000)
-path = os.getcwd() + f'\\attractor_frames\\HLAttractor_{attractor.a}_{attractor.b}_{attractor.c}.bmp'
-screen.draw_pixels(poss)
 screen.save(path)
 screen.show()

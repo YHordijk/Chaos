@@ -6,7 +6,7 @@ from math import cos, sin, pi
 import colour as clr
 
 class Screen:
-    def __init__(self, size, rangex, rangey, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=1):
+    def __init__(self, size, rangex=None, rangey=None, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=1):
         self.disp = pg.surface.Surface(size)
         self.disp.fill(bkgr_colour)
         # self.disp = pg.display.set_mode(size)
@@ -94,7 +94,13 @@ class Screen:
             except:
                 pass
 
-    def draw_pixels(self, poss, rot=None):
+    def draw_pixels(self, poss, rot=None, auto_size=False):
+        if auto_size:
+            x = [i[0] for i in poss]
+            self.rangex = min(x), max(x)
+            y = [i[1] for i in poss]
+            self.rangey = min(y), max(y)
+
         for pos in poss:
             self.draw_pixel(pos, rot)
 
