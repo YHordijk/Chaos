@@ -43,15 +43,14 @@ import random
 #         #set the variables to be used by rule
 
 #         if self.rule == 1:
-#             self.rulevars = ('x', 'y')
-#             self.equations = ('self.x = self.x',
+#             self.rulevars = (#             self.equations = ('self.x = self.x',
 #                              'self.y = self.x*self.y*(1-self.y)')
 #             self.standard_sett = ('self.rangex = (2.4, 4)',
 #                                   'self.rangey = (0, 1)')
 #             self.explanation = 'Standard bifurcation, logistic map.'
 			
 #         if self.rule == 2:
-#             self.rulevars = ('x', 'y', 'u')
+#             self.rulevars = ('u')
 #             self.equations = ('self.t = 0.4 - 6/(1+self.x**2+self.y**2)',
 #                              'self.x = 1+self.u*(self.x*cos(self.t)-self.y*(sin(self.t)))',
 #                              'self.y = self.u*(self.x*sin(self.t)+self.y*(cos(self.t)))')
@@ -61,7 +60,7 @@ import random
 #             self.explanation = 'Ikeda map'
 			
 #         if self.rule == 3:
-#             self.rulevars = ('x', 'y', 'a')
+#             self.rulevars = ('a')
 #             self.equations = ('self.x = self.x',
 #                               'self.y = exp(-self.a*self.y**2)+self.x')
 #             self.standard_sett = ('self.rangex = (-1, 1)',
@@ -69,7 +68,7 @@ import random
 #                                   'self.a = 6.2')
 			
 #         if self.rule == 4:
-#             self.rulevars = ('x', 'y', 'k')
+#             self.rulevars = ('k')
 #             self.equations = ('self.oldx = self.x',
 #                               'self.x = (self.oldx + self.y + self.k/(1)*sin(2*pi*self.x))%(1)',
 #                               'self.y = (self.oldx - self.x)%(2*pi)')
@@ -78,7 +77,7 @@ import random
 #                                   'self.k = 0.6')
 			
 #         if self.rule == 5:
-#             self.rulevars = ('x', 'y', 'k')
+#             self.rulevars = ('k')
 #             self.equations = ('self.x = (self.x + self.k*sin(self.y))%(2*pi)',
 #                               'self.y = (self.y + self.x)%(2*pi)')
 #             self.standard_sett = ('self.rangex = (0, 2*pi)',
@@ -86,7 +85,7 @@ import random
 #                                   'self.k = 0.6')
 
 #         if self.rule == 6:
-#             self.rulevars = ('x', 'y', 'a', 'b', 'c', 'd')
+#             self.rulevars = ('a', 'b', 'c', 'd')
 #             self.equations = ('oldx = self.x',
 #                               'self.x = self.x**2 - self.y**2 + self.a*self.x + self.b*self.y',
 #                               'self.y = 2*oldx*self.y+self.c*self.x + self.d*self.y')
@@ -105,7 +104,7 @@ import random
 #     def set_rule(self):
 #         from random import randrange
 #         self.nextvert = self.verteces[randrange(0, len(self.verteces))]
-#         self.rulevars = ('x', 'y', 'A', 'B')
+#         self.rulevars = ('A', 'B')
 #         self.equations = ('self.x = (self.nextvert[0] + self.x)/self.A',
 #                           'self.y = (self.nextvert[1] + self.y)/self.B')
 #         self.standard_sett = ('self.A = 0.5',
@@ -177,6 +176,21 @@ class Rule3:
 				return
 
 
+class JR1Attractor(Rule3):
+	def set_rule(self):
+		self.vars = ['x', 'y', 'a', 'b', 'c', 'd']
+		self.equations = ['self.nx = math.cos(self.y*self.b) + self.c*math.sin(self.x*self.b)',
+						  'self.y = math.cos(self.x*self.a) + self.d*math.sin(self.y*self.a)',
+						  'self.x = self.nx']
+
+		self.vector_equations = []
+		self.suggested_space = []
+		self.explanation = 'Gumowski-Mira Attractor.'
+
+		self.a, self.b, self.c, self.d = 6*random.random()-3, 6*random.random()-3, 6*random.random()-3, 6*random.random()-3
+		self.start_pos = 0.1, 0.1
+		
+
 class GMAttractor(Rule3):
 	def set_rule(self):
 		self.vars = ['x', 'y', 'a', 'b']
@@ -188,6 +202,7 @@ class GMAttractor(Rule3):
 		self.vector_equations = []
 		self.suggested_space = []
 		self.explanation = 'Gumowski-Mira Attractor.'
+		self.name = 'Gumowski-Mira Attractor'
 
 		self.w = 0
 		self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
@@ -202,6 +217,7 @@ class BHAttractor(Rule3):
 		self.vector_equations = []
 		self.suggested_space = []
 		self.explanation = 'Bedhead Attractor.'
+		self.name = 'Bedhead Attractor'
 
 		self.a, self.b = random.random()*2 - 1, random.random()*2 -1 
 		self.start_pos = 1., 1.
@@ -219,6 +235,7 @@ class HLAttractor(Rule3):
 		self.vector_equations = []
 		self.suggested_space = []
 		self.explanation = 'Hopalong Attractor.'
+		self.name = 'Hopalong Attractor'
 
 		self.a, self.b, self.c = random.random()*10, random.random()*10, random.random()*10
 		self.start_pos = 0., 0.
@@ -232,7 +249,7 @@ class Mandelbrot(Rule3):
 		self.rule_variant = rule_variant
 		super().__init__(**kwargs)
 
-	def start(self):
+	def iterate(self):
 		for i in range(self.screen.size[0]):
 			print(f'Generating Mandelbrot plot. Current progress: {round(100 * i / self.screen.size[0])}%', end='\r')
 			for j in range(self.screen.size[1]):
@@ -263,8 +280,9 @@ class Mandelbrot(Rule3):
 			return complex(abs(self.z.real), abs(self.z.imag))**2 + self.c
 
 	def set_rule(self):
-		self.vars = ['x', 'y', 'c', 'd']
+		self.vars = ['epsilon', 'max_iters']
 		self.equations = []
+		self.name = 'Mandelbrot Set'
 
 
 class Julia(Mandelbrot):
@@ -272,7 +290,7 @@ class Julia(Mandelbrot):
 		self.c = c
 		super().__init__(**kwargs)
 
-	def start(self):
+	def iterate(self):
 		for i in range(self.screen.size[0]):
 			print(f'Generating Julia plot. Current progress: {round(100 * i / self.screen.size[0])}%', end='\r')
 			for j in range(self.screen.size[1]):
@@ -294,13 +312,17 @@ class Julia(Mandelbrot):
 					self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
 					# self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
 
+	def set_rule(self):
+		self.vars = ['c', 'epsilon', 'max_iters']
+		self.equations = []
+		self.name = 'Julia Set'
 
 class Ikeda(Rule3):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
 	def set_rule(self):
-		self.vars = ['x', 'y', 'u']
+		self.vars = ['u']
 		self.equations = ['self.t = 0.4 - 6 / (1 + pow(self.x,2) + pow(self.y,2))',
 						  'self.x = 1 + self.u * (self.x*math.cos(self.t)-self.y*(math.sin(self.t)))',
 						  'self.y = self.u*(self.x*math.sin(self.t)+self.y*(math.cos(self.t)))']
@@ -364,7 +386,7 @@ class ChaosGame(Rule3):
 
 	def set_rule(self):
 		if self.rule_variant == 0:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			self.equations = ('self.nextvert = random.choice(self.vertices)',
 							  'self.x = (self.nextvert[0] + self.x)*self.A',
 							  'self.y = (self.nextvert[1] + self.y)*self.B')
@@ -375,7 +397,7 @@ class ChaosGame(Rule3):
 			self.B = 0.5
 
 		if self.rule_variant == 1:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			self.nextvert = self.choose_vertex()
 			self.equations = (
 '''
@@ -393,7 +415,7 @@ self.y = (self.nextvert[1] + self.y)*self.B
 			self.B = 0.5
 
 		if self.rule_variant == 2:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			# self.vert_history.append(random.choice(self.vertices))
 			self.nextvert = self.choose_vertex()
 			self.equations = (
@@ -415,7 +437,7 @@ self.y = (self.nextvert[1] + self.y)*self.B
 			self.B = 0.5
 
 		if self.rule_variant == 3:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			# self.vert_history.append(random.choice(self.vertices))
 			self.nextvert = self.choose_vertex()
 			self.equations = (
@@ -437,7 +459,7 @@ self.y = (self.nextvert[1] + self.y)*self.B
 			self.B = 0.5
 
 		if self.rule_variant == 4:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			self.equations = (
 '''
 self.nextvert = self.choose_vertex()
@@ -463,7 +485,7 @@ self.p1vert = self.nextvert
 			self.B = 0.5
 
 		if self.rule_variant == 5:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			self.nextvert = self.choose_vertex()
 			self.equations = ('j = random.choices(list(range(len(self.vertices))), weights=self.vertex_probs)[0]',
 							  'self.nextvert = self.vertices[j]',
@@ -477,7 +499,7 @@ self.p1vert = self.nextvert
 			self.B = 0.5
 
 		if self.rule_variant == 6:
-			self.vars = ['x', 'y', 'A', 'B']
+			self.vars = ['A', 'B']
 			self.nextvert = self.choose_vertex()
 			self.equations = (
 '''
