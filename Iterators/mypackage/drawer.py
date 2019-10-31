@@ -60,6 +60,7 @@ class Screen:
 
     @bkgr_colour.setter
     def bkgr_colour(self, val):
+        self.disp.fill(val)
         self._bkgr_colour = val
         self.set_draw_colour_grad()
         return self._bkgr_colour
