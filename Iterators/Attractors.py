@@ -42,11 +42,25 @@ def GMsnapshots(variant=0):
 
 	return screen, attractor, start_pos, path
 
+def JR1snapshots(variant=0):
+	if variant == 0:
+		attractor = rule.JR1Attractor(a=2.6, b=-2.5995, c=-2.9007, d=0.3565)
 
-screen, attractor, path = BHsnapshots(3)
-screen.draw_opacity_steps = 7
+	if variant == 1:
+		attractor = rule.JR1Attractor(a=-2.7918, b=2.1196, c=1.0284, d=0.1384)
 
-poss = attractor.iterate(1000000, iter_skip=1000)
+	path = os.getcwd() + f'\\attractor_frames\\JR1Attractor_{attractor.a}_{attractor.b}_{attractor.c}_{attractor.d}.bmp'
+	screen = draw.Screen((500, 500))
+
+	return screen, attractor, path
+
+
+screen, attractor, path = JR1snapshots(1)
+screen.draw_opacity_steps = 2
+screen.draw_colour = (200, 20, 75)
+screen.bkgr_colour = (225, 225, 225)
+
+poss = attractor.iterate(100000, iter_skip=1000)
 screen.draw_pixels(poss, auto_size=True)
 
 screen.save(path)
