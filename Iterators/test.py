@@ -4,6 +4,15 @@ import random
 import math
 import os
 
-screen = draw.Screen((200, 200), None, None, draw_opacity_steps=3, bkgr_colour=(255,255,255), draw_colour=(0,0,0))
-rule = rule.StrangeAttractor(rule_string='AMTMNQQXUYGA')
-rule.find_best_size()
+
+
+def test():
+	for i in range(100):
+		if i%10 == 0:
+			print(i)
+			yield i
+	return True
+
+
+a = test()
+for progress in a: pass
