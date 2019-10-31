@@ -1,0 +1,15 @@
+
+class JR1Attractor(Rule3):
+	def set_rule(self):
+		self.vars = ['x', 'y', 'a', 'b', 'c', 'd']
+		self.equations = ['self.nx = math.cos(self.y*self.b) + self.c*math.sin(self.x*self.b)',
+						  'self.y = math.cos(self.x*self.a) + self.d*math.sin(self.y*self.a)',
+						  'self.x = self.nx']
+
+		self.vector_equations = []
+		self.suggested_space = []
+		self.explanation = 'Gumowski-Mira Attractor.'
+
+		self.a, self.b, self.c, self.d = 6*random.random()-3, 6*random.random()-3, 6*random.random()-3, 6*random.random()-3
+		self.start_pos = 0.1, 0.1
+		
