@@ -6,11 +6,11 @@ from math import cos, sin, pi
 import colour as clr
 
 class Screen:
-    def __init__(self, size, rangex=None, rangey=None, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=1):
-        self.disp = pg.surface.Surface(size)
+    def __init__(self, resolution, rangex=None, rangey=None, bkgr_colour=(0,0,0), draw_colour=(255,255,255), draw_opacity_steps=1):
+        self.disp = pg.surface.Surface(resolution)
         self.disp.fill(bkgr_colour)
         # self.disp = pg.display.set_mode(size)
-        self.size = size
+        self.resolution = resolution
         self.rangex = rangex
         self.rangey = rangey
         self._bkgr_colour = bkgr_colour
@@ -30,11 +30,11 @@ class Screen:
     
 
     def set_draw_colour_grad(self):
-        if self.draw_opacity_steps > 1:
+        if self._draw_opacity_steps > 1:
             c1 = clr.Color(rgb=list(np.asarray(self._bkgr_colour)/255))
             c2 = clr.Color(rgb=list(np.asarray(self._draw_colour)/255))
 
-            range = list(c1.range_to(c2, self.draw_opacity_steps))
+            range = list(c1.range_to(c2, self._draw_opacity_steps))
 
             self.draw_colour_grad = [tuple((np.asarray(c.rgb)*255).astype(int)) for c in range]
             self.draw_colour_grad[0] = self.bkgr_colour
@@ -107,30 +107,30 @@ class Screen:
 
     def transform_to_range(self, pos):
         x, y = pos[0], pos[1]
-        x = x*(self.rangex[1]-self.rangex[0]) / self.size[0] + self.rangex[0]
-        y = y*(self.rangey[1]-self.rangey[0]) / self.size[1] + self.rangey[0]
+        x = x*(self.rangex[1]-self.rangex[0]) / self.resolution[0] + self.rangex[0]
+        y = y*(self.rangey[1]-self.rangey[0]) / self.resolution[1] + self.rangey[0]
         return x, y
 
     def transform_to_disp(self, pos):
         #takes position in rangex, rangey and outputs position on size
         x, y = pos[0], pos[1]
-        x = round((x - self.rangex[0])*self.size[0]/(self.rangex[1]-self.rangex[0]))
-        y = round((y - self.rangey[0])*self.size[1]/(self.rangey[1]-self.rangey[0]))
+        x = round((x - self.rangex[0])*self.resolution[0]/(self.rangex[1]-self.rangex[0]))
+        y = round((y - self.rangey[0])*self.resolution[1]/(self.rangey[1]-self.rangey[0]))
         return int(x), int(y)
 
     def rotate(self, x, y, rot):
-        x -= self.size[0]/2
-        y -= self.size[1]/2
+        x -= self.resolution[0]/2
+        y -= self.resolution[1]/2
         
         newx = x * cos(rot) - y * sin(rot)
         newy = x * sin(rot) + y * cos(rot)
         
-        newx += self.size[0]/2
-        newy += self.size[1]/2
+        newx += self.resolution[0]/2
+        newy += self.resolution[1]/2
         return int(newx), int(newy)
 
     def show(self):
-        dest = pg.display.set_mode(self.size)
+        dest = pg.display.set_mode(self.resolution)
         dest.blit(self.disp, (0,0))
         pg.display.flip()
         keepon = True

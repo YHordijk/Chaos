@@ -135,7 +135,8 @@ class Rule3:
 					eq = eq.replace(p[0], p[1])
 				self.vector_equations.append(eq)
 
-	def iterate(self, iterations, start_pos=None, iter_skip=0):
+	def iterate(self, iterations=None, start_pos=None, iter_skip=0):
+		if iterations is None: iterations = self.iterations
 		self.x, self.y = start_pos if start_pos is not None else self.start_pos
 		
 		pos = []
@@ -178,7 +179,7 @@ class Rule3:
 
 class JR1Attractor(Rule3):
 	def set_rule(self):
-		self.vars = ['x', 'y', 'a', 'b', 'c', 'd']
+		self.vars = ['iterations', 'init_x', 'init_y', 'a', 'b', 'c', 'd']
 		self.equations = ['self.nx = math.cos(self.y*self.b) + self.c*math.sin(self.x*self.b)',
 						  'self.y = math.cos(self.x*self.a) + self.d*math.sin(self.y*self.a)',
 						  'self.x = self.nx']
@@ -187,13 +188,15 @@ class JR1Attractor(Rule3):
 		self.suggested_space = []
 		self.explanation = 'Gumowski-Mira Attractor.'
 
-		self.a, self.b, self.c, self.d = 6*random.random()-3, 6*random.random()-3, 6*random.random()-3, 6*random.random()-3
-		self.start_pos = 0.1, 0.1
+		# self.a, self.b, self.c, self.d = 6*random.random()-3, 6*random.random()-3, 6*random.random()-3, 6*random.random()-3
+		self.a=-2.7918; self.b=2.1196; self.c=1.0284; self.d=0.1384
+		self.iterations = 1000000
+		self.start_pos = self.init_x, self.init_y = 0.1, 0.1
 		
 
 class GMAttractor(Rule3):
 	def set_rule(self):
-		self.vars = ['x', 'y', 'a', 'b']
+		self.vars = ['iterations', 'init_x', 'init_y', 'a', 'b']
 		self.equations = ['self.t = self.x',
 						  'self.x = self.b * self.y + self.w',
 						  'self.w = self.a*self.x + (1-self.a)*2*self.x**2/(1+self.x**2)',
@@ -206,10 +209,11 @@ class GMAttractor(Rule3):
 
 		self.w = 0
 		self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
+		self.iterations = 1000000
 
 class BHAttractor(Rule3):
 	def set_rule(self):
-		self.vars = ['x', 'y', 'a', 'b']
+		self.vars = ['iterations', 'init_x', 'init_y', 'a', 'b']
 		self.equations = ['self.nx = math.sin(self.x*self.y/self.b)*self.y + math.cos(self.a*self.x-self.y)',
 						  'self.y = self.x + math.sin(self.y)/self.b',
 						  'self.x = self.nx']
@@ -220,14 +224,15 @@ class BHAttractor(Rule3):
 		self.name = 'Bedhead Attractor'
 
 		self.a, self.b = random.random()*2 - 1, random.random()*2 -1 
-		self.start_pos = 1., 1.
+		self.iterations = 1000000
+		self.start_pos = self.init_x, self.init_y = 1., 1.
 
 		# self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
 
 
 class HLAttractor(Rule3):
 	def set_rule(self):
-		self.vars = ['x', 'y', 'a', 'b', 'c']
+		self.vars = ['iterations', 'init_x', 'init_y', 'a', 'b', 'c']
 		self.equations = ['self.nx = self.y - 1 - math.sqrt(abs(self.b*self.x-1-self.c))*math.copysign(1, self.x-1)',
 						  'self.y = self.a - self.x - 1',
 						  'self.x = self.nx']
@@ -238,7 +243,8 @@ class HLAttractor(Rule3):
 		self.name = 'Hopalong Attractor'
 
 		self.a, self.b, self.c = random.random()*10, random.random()*10, random.random()*10
-		self.start_pos = 0., 0.
+		self.iterations = 1000000
+		self.start_pos = self.init_x, self.init_y = 0., 0.
 		# self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
 
 
