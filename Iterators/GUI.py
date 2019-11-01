@@ -10,8 +10,8 @@ import time
 class MainWindow(tk.Frame):
 	def __init__(self):
 		#define some variables to ease selection of chaotic type and set objects for later
-		self._chaotic_types = ['Chaos Game', 'Ikeda Map', 'Mandelbrot Set', 'Bedhead Attractor', 'Hopalong Attractor', 'Rampe1 Attractor']
-		self._chaotic_types_classes = [rule.ChaosGame(), rule.Ikeda(), rule.Mandelbrot(), rule.BHAttractor(), rule.HLAttractor(), rule.JR1Attractor()]
+		self._chaotic_types = ['Chaos Game', 'Ikeda Map', 'Mandelbrot Set', 'Bedhead Attractor', 'Hopalong Attractor', 'Rampe1 Attractor', 'Gumowski-Mira Attractor']
+		self._chaotic_types_classes = [rule.ChaosGame(), rule.Ikeda(), rule.Mandelbrot(), rule.BHAttractor(), rule.HLAttractor(), rule.JR1Attractor(), rule.GMAttractor()]
 		self._chaotic_types_settings = [None for i in range(len(self._chaotic_types))]
 		self._generate_standard_settings()
 		self.rule = self._chaotic_types_classes[0]
@@ -22,6 +22,7 @@ class MainWindow(tk.Frame):
 		self.padx, self.pady = 5, 3
 		self._create_widgets()
 		tk.Frame.__init__(self, self._root)
+		self._snapshot = tk.IntVar(); self._snapshot.set(0)
 
 
 	def _generate_standard_settings(self):
@@ -35,7 +36,7 @@ class MainWindow(tk.Frame):
 	def _set_parameter_widgets(self):
 		
 		#make new window
-		p = tk.Toplevel()
+		self.p = p = tk.Toplevel()
 		px, py = self.padx, self.pady
 
 		curr_row = 0
@@ -59,7 +60,15 @@ tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 		self._chaotic_types_settings[self._chaotic_type_index] = settings
 
 		curr_row += 1
-		tk.Button(p, text='Save', command=self._save_settings, width=20).grid(row=curr_row, columnspan=3, padx=px, pady=py)
+		tk.Button(p, text='Save', command=self._save_settings, width=20).grid(row=curr_row, column=0, padx=px, pady=py)
+		tk.Button(p, text='Load', command=self._load_settings, width=20).grid(row=curr_row, column=1, padx=px, pady=py)
+		tk.Entry(p, textvariable=self._snapshot, width=3).grid(row=curr_row, column=2, padx=px, pady=py, sticky='W')
+
+
+	def _load_settings(self):
+		self.rule.load_snapshot(self._snapshot.get())
+		self.p.destroy()
+		self._set_parameter_widgets()
 
 
 	def _save_settings(self):
@@ -206,7 +215,7 @@ tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 		bkgr_colour = self._bkgr_R.get(), self._bkgr_G.get(), self._bkgr_B.get()
 		self.screen = drawer.Screen(resolution, draw_colour=draw_colour, bkgr_colour=bkgr_colour)
 		self.screen.draw_opacity_steps = int(self.opacity_entry.get())
-		print(self.screen.draw_colour_grad)
+
 		self.screen.draw_pixels(poss, auto_size=True)
 		self.screen.save(self._save_path.get())
 		if self._show_on_completion.get():

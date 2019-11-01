@@ -176,6 +176,12 @@ class Rule3:
 				print('Error: to plot on screen, please supply drawer.screen object.')
 				return
 
+	def load_snapshot(self, index=0):
+		snapshot = self.snapshots[index]
+		for val, var in zip(snapshot, self.vars):
+			setattr(self, var, val)
+
+
 
 class JR1Attractor(Rule3):
 	def set_rule(self):
@@ -186,30 +192,40 @@ class JR1Attractor(Rule3):
 
 		self.vector_equations = []
 		self.suggested_space = []
+		self.snapshots = [[1000000, 0.1, 0.1, -2.7918, 2.1196, 1.0284, 0.1384],
+						  [1000000, 0.1, 0.1, 2.6, -2.5995, -2.9007, 0.3565],
+						  [1000000, 0.1, 0.1, 1.8285, -1.8539, 0.3816, 1.9765],
+						  [1000000, 0.1, 0.1, 2.5425, 2.8358, -0.8721, 2.7044],
+						  [1000000, 0.1, 0.1, -1.8669, 1.2768, -2.9296, -0.4121]]
 		self.explanation = 'Gumowski-Mira Attractor.'
 
-		# self.a, self.b, self.c, self.d = 6*random.random()-3, 6*random.random()-3, 6*random.random()-3, 6*random.random()-3
-		self.a=-2.7918; self.b=2.1196; self.c=1.0284; self.d=0.1384
-		self.iterations = 1000000
-		self.start_pos = self.init_x, self.init_y = 0.1, 0.1
+		self.load_snapshot(0)
+		self.start_pos = self.init_x, self.init_y
 		
 
 class GMAttractor(Rule3):
 	def set_rule(self):
 		self.vars = ['iterations', 'init_x', 'init_y', 'a', 'b']
 		self.equations = ['self.t = self.x',
-						  'self.x = self.b * self.y + self.w',
+						  'self.nx = self.b * self.y + self.w',
 						  'self.w = self.a*self.x + (1-self.a)*2*self.x**2/(1+self.x**2)',
-						  'self.y = self.w - self.t']
-
+						  'self.y = self.w - self.t',
+						  'self.x = self.nx']
 		self.vector_equations = []
 		self.suggested_space = []
 		self.explanation = 'Gumowski-Mira Attractor.'
 		self.name = 'Gumowski-Mira Attractor'
-
+		self.snapshots = [[1000000, 0, 0.5, -0.31, 1],
+						  [1000000, -0.61, 0.1, -0.012, 0.9186],
+						  [1000000, 0.1, 0.1, -0.77, 0.95],
+						  [1000000, 0.78662442881614, 0.919355855789036, 0.900278024375439, 0.661233567167073],
+						  [1000000, 0, 0.5, 0.008, -0.7],
+						  [1000000, -0.325819793157279, 0.48573582014069, 0.062683217227459, -0.436713613104075],
+						  [1000000, -0.723135391715914, -0.327585775405169, 0.79253300698474, 0.345703079365194]]
+		self.load_snapshot(0)
+		self.start_pos = self.init_x, self.init_y
 		self.w = 0
-		self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
-		self.iterations = 1000000
+
 
 class BHAttractor(Rule3):
 	def set_rule(self):
@@ -217,17 +233,18 @@ class BHAttractor(Rule3):
 		self.equations = ['self.nx = math.sin(self.x*self.y/self.b)*self.y + math.cos(self.a*self.x-self.y)',
 						  'self.y = self.x + math.sin(self.y)/self.b',
 						  'self.x = self.nx']
-
 		self.vector_equations = []
 		self.suggested_space = []
 		self.explanation = 'Bedhead Attractor.'
 		self.name = 'Bedhead Attractor'
+		self.snapshots = [[1000000, 1., 1., 0.65343, 0.7345345],
+						  [1000000, 1., 1., -0.81, -0.92],
+						  [1000000, 1., 1., 0.06, 0.98],
+						  [1000000, 1., 1., -0.64, 0.76],
+						  [1000000, 1., 1., -0.67, 0.83]]
 
-		self.a, self.b = random.random()*2 - 1, random.random()*2 -1 
-		self.iterations = 1000000
-		self.start_pos = self.init_x, self.init_y = 1., 1.
-
-		# self.a, self.b = 2*random.rand()-1, 2*random.rand()-1
+		self.load_snapshot(0)
+		self.start_pos = self.init_x, self.init_y
 
 
 class HLAttractor(Rule3):
