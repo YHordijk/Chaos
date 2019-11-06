@@ -4,6 +4,7 @@ import random
 import math
 import os
 import numpy as np
+import pygame as pg
 
 #Snapshots
 def BHsnapshots(variant=0):
@@ -60,8 +61,18 @@ screen.draw_opacity_steps = 2
 screen.draw_colour = (200, 20, 75)
 screen.bkgr_colour = (225, 225, 225)
 
-poss = attractor.iterate(100000, iter_skip=1000)
-screen.draw_pixels(poss, auto_size=True)
+poss = attractor.iterate(10000, iter_skip=1000)
+# screen.draw_pixels(poss, auto_size=True)
+disp = screen.disp
+arr = pg.surfarray.array2d(screen.disp)
+# arr.unmap_rgb(0)
+
+for i in range(500):
+	print(arr[i][i])
+	arr[i][i] = disp.map_rgb((255,0,0))
+
+screen.disp = pg.surfarray.make_surface(arr)
+print(arr)
 
 screen.save(path)
 screen.show()

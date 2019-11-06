@@ -12,7 +12,7 @@ class MainWindow(tk.Frame):
 		#define some variables to ease selection of chaotic type and set objects for later
 		self._chaotic_types = ['Chaos Game', 'Ikeda Map', 'Mandelbrot Set', 'Bedhead Attractor', 'Hopalong Attractor', 'Rampe1 Attractor', 'Gumowski-Mira Attractor']
 		self._chaotic_types_classes = [rule.ChaosGame(), rule.Ikeda(), rule.Mandelbrot(), rule.BHAttractor(), rule.HLAttractor(), rule.JR1Attractor(), rule.GMAttractor()]
-		self._chaotic_types_settings = [None for i in range(len(self._chaotic_types))]
+		self._chaotic_types_settings = [None for i in range(len(self._chaotic_types_classes))]
 		self._generate_standard_settings()
 		self.rule = self._chaotic_types_classes[0]
 
@@ -26,15 +26,9 @@ class MainWindow(tk.Frame):
 
 
 	def _generate_standard_settings(self):
-		for i, obj in enumerate(self._chaotic_types_classes):
-			setting = []
-			for var in obj.vars:
-				exec(f'setting.append(obj.{var})')
-			self._chaotic_types_settings[i] = setting
-
+		self._chaotic_types_settings = [[getattr(obj, var) for var in obj.vars] for obj in self._chaotic_types_classes]
 
 	def _set_parameter_widgets(self):
-		
 		#make new window
 		self.p = p = tk.Toplevel()
 		px, py = self.padx, self.pady
@@ -86,12 +80,16 @@ tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 		curr_row = 0
 		tk.Label(r, text='Settings').grid(row=curr_row, columnspan=2, padx=px, pady=py)
 
+		curr_row += 1
+		sf = tk.Frame(r, bg=("light grey"), bd=2, relief='ridge')
+		sf.grid(row=curr_row, padx=px, pady=py)
+
 		#Set chaotic type row
 		curr_row += 1
 		self._chaotic_type = tk.StringVar(); self._chaotic_type.set(self._chaotic_types[0])
-		frame = tk.Frame(r)
+		frame = tk.Frame(sf, bg=("light grey"))
 		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(r, text='Chaotic generator type: ', anchor="e").grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		tk.Label(sf, text='Chaotic generator type: ', anchor="e", bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
 		o = tk.OptionMenu(frame, self._chaotic_type, *self._chaotic_types, command=self._update_rule)
 		o.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		o.config(width=30)
@@ -100,66 +98,66 @@ tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 		# #make iterations setting
 		# curr_row += 1
 		# self._iterations = tk.IntVar(); self._iterations.set(1000000)
-		# tk.Label(r, text='Iterations: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		# tk.Entry(r, textvariable=self._iterations, width=12).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
+		# tk.Label(sf, text='Iterations: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		# tk.Entry(sf, textvariable=self._iterations, width=12).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 
 		#Resolution setting
 		curr_row += 1
 		self._resx, self._resy = tk.IntVar(), tk.IntVar(); self._resx.set(4000), self._resy.set(2250)
-		tk.Label(r, text='Resolution: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		tk.Label(sf, text='Resolution: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
 		#make container for resolution
-		frame = tk.Frame(r)
+		frame = tk.Frame(sf, bg=("light grey"))
 		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		tk.Entry(frame, textvariable=self._resx, width=6).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='x').grid(row=curr_row, column=2, sticky='W', pady=py)
+		tk.Label(frame, text='x', bg=("light grey")).grid(row=curr_row, column=2, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._resy, width=6).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
 
 		#Display on completion
 		curr_row += 1
 		self._show_on_completion = tk.BooleanVar(); self._show_on_completion.set(False)
-		tk.Label(r, text='Display generated image: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		tk.Checkbutton(r, variable=self._show_on_completion).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
+		tk.Label(sf, text='Display generated image: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		tk.Checkbutton(sf, variable=self._show_on_completion, bg=("light grey")).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 
 		#opacity setting
 		curr_row += 1
 		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(r, text='Opacity Steps: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		self.opacity_entry = tk.Entry(r, textvariable=self._opacity_steps, width=3)
+		tk.Label(sf, text='Opacity Steps: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		self.opacity_entry = tk.Entry(sf, textvariable=self._opacity_steps, width=3)
 		self.opacity_entry.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 
 		#draw colour
 		curr_row += 1
 		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(r, text='Background Colour: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		frame = tk.Frame(r)
+		tk.Label(sf, text='Background Colour: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		frame = tk.Frame(sf, bg=("light grey"))
 		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		self._bkgr_R, self._bkgr_G, self._bkgr_B = tk.IntVar(), tk.IntVar(), tk.IntVar(); self._bkgr_R.set(0), self._bkgr_G.set(0), self._bkgr_B.set(0)
-		tk.Label(frame, text='R: ').grid(row=curr_row, column=0, sticky='W', pady=py)
+		tk.Label(frame, text='R: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._bkgr_R, width=3).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='G:').grid(row=curr_row, column=2, sticky='W', pady=py)
+		tk.Label(frame, text='G:', bg=("light grey")).grid(row=curr_row, column=2, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._bkgr_G, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='B:').grid(row=curr_row, column=4, sticky='W', pady=py)
+		tk.Label(frame, text='B:', bg=("light grey")).grid(row=curr_row, column=4, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._bkgr_B, width=3).grid(row=curr_row, column=5, sticky='W', padx=px, pady=py)
 
 		#draw colour
 		curr_row += 1
 		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(r, text='Draw Colour: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		frame = tk.Frame(r)
+		tk.Label(sf, text='Draw Colour: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		frame = tk.Frame(sf, bg=("light grey"))
 		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		self._draw_R, self._draw_G, self._draw_B = tk.IntVar(), tk.IntVar(), tk.IntVar(); self._draw_R.set(255), self._draw_G.set(255), self._draw_B.set(255)
-		tk.Label(frame, text='R: ').grid(row=curr_row, column=0, sticky='W', pady=py)
+		tk.Label(frame, text='R: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._draw_R, width=3).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='G:').grid(row=curr_row, column=2, sticky='W', pady=py)
+		tk.Label(frame, text='G:', bg=("light grey")).grid(row=curr_row, column=2, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._draw_G, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='B:').grid(row=curr_row, column=4, sticky='W', pady=py)
+		tk.Label(frame, text='B:', bg=("light grey")).grid(row=curr_row, column=4, sticky='W', pady=py)
 		tk.Entry(frame, textvariable=self._draw_B, width=3).grid(row=curr_row, column=5, sticky='W', padx=px, pady=py)
 
 		#Path setting
 		curr_row += 1
 		self._save_path = tk.StringVar()
-		tk.Label(r, text='Image path: ').grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		self.path_entry = tk.Entry(r, textvariable=self._save_path, width=45)
+		tk.Label(sf, text='Image path: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		self.path_entry = tk.Entry(sf, textvariable=self._save_path, width=45)
 		self.path_entry.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		self._update_path()
 
