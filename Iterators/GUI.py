@@ -1,9 +1,10 @@
 import tkinter as tk 
 from tkinter import ttk
 import os
-import mypackage.rule as rule
+import mypackage.rule2 as rule
 import mypackage.drawer as drawer
 import time
+import multiprocessing as mp
 
 
 
@@ -15,6 +16,7 @@ class MainWindow(tk.Frame):
 		self._chaotic_types_settings = [None for i in range(len(self._chaotic_types_classes))]
 		self._generate_standard_settings()
 		self.rule = self._chaotic_types_classes[0]
+		self._chaotic_type_index = 0
 
 		self._root = tk.Tk()
 		self._root.title('Chaos Drawer')
@@ -22,7 +24,7 @@ class MainWindow(tk.Frame):
 		self.padx, self.pady = 5, 3
 		self._create_widgets()
 		tk.Frame.__init__(self, self._root)
-		self._snapshot = tk.IntVar(); self._snapshot.set(0)
+		self._snapshot = tk.IntVar(); self._snapshot.set(1)
 
 
 	def _generate_standard_settings(self):
@@ -31,15 +33,20 @@ class MainWindow(tk.Frame):
 	def _set_parameter_widgets(self):
 		#make new window
 		self.p = p = tk.Toplevel()
+		pf = tk.Frame(p, bg=("light grey"), bd=2, relief='ridge')
 		px, py = self.padx, self.pady
 
 		curr_row = 0
 		tk.Label(p, text=f'Settings: {self._chaotic_type.get()}').grid(row=0, padx=px, pady=py, columnspan=3)
 
 		curr_row += 1
-		tk.Label(p, text='Parameter').grid(row=curr_row, column=0, padx=px, pady=py)
-		tk.Label(p, text='Value').grid(row=curr_row, column=1, padx=px, pady=py)
-		tk.Label(p, text='Suggested Space').grid(row=curr_row, column=2, padx=px, pady=py)
+		pf.grid(row=curr_row, padx=px, pady=py, columnspan=5, sticky='ew')
+		tk.Label(pf, bg=("light grey"), text='Parameter').grid(row=curr_row, column=0, padx=px, pady=py)
+		tk.Label(pf, bg=("light grey"), text='Value').grid(row=curr_row, column=1, padx=px, pady=py)
+		tk.Label(pf, bg=("light grey"), text='Suggested Space').grid(row=curr_row, column=2, padx=px, pady=py)
+
+		curr_row += 1
+		ttk.Separator(pf).grid(row=curr_row, columnspan=3)
 
 		settings = []
 		for var in self.rule.vars:
@@ -48,28 +55,27 @@ class MainWindow(tk.Frame):
 setting = tk.StringVar()
 setting.set(self.rule.{var})
 settings.append(setting)
-tk.Label(p, text="{var}").grid(row=curr_row, column=0, padx=px, pady=py)
-tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
+tk.Label(pf, bg=("light grey"), text="{var}").grid(row=curr_row, column=0, padx=px, pady=py)
+tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 				''')
 		self._chaotic_types_settings[self._chaotic_type_index] = settings
 
 		curr_row += 1
 		tk.Button(p, text='Save', command=self._save_settings, width=20).grid(row=curr_row, column=0, padx=px, pady=py)
-		tk.Button(p, text='Load', command=self._load_settings, width=20).grid(row=curr_row, column=1, padx=px, pady=py)
-		tk.Entry(p, textvariable=self._snapshot, width=3).grid(row=curr_row, column=2, padx=px, pady=py, sticky='W')
-
+		tk.Button(p, text='Load Preset', command=self._load_settings, width=20).grid(row=curr_row, column=1, padx=px, pady=py)
+		tk.Entry(p, textvariable=self._snapshot, width=3).grid(row=curr_row, column=2, pady=py, sticky='W')
+		tk.Label(p, text=f'/{len(self.rule.snapshots)}').grid(row=curr_row, column=3, pady=py, sticky='W')
 
 	def _load_settings(self):
-		self.rule.load_snapshot(self._snapshot.get())
+		self.rule.load_snapshot(self._snapshot.get()-1)
 		self.p.destroy()
-		self._set_parameter_widgets()
-
 
 	def _save_settings(self):
 		settings = self._chaotic_types_settings[self._chaotic_type_index]
 		#set rule variables according to settings set in self._set_parameter_widgets
 		for i, setting in enumerate(settings):
 			exec(f'self.rule.{self.rule.vars[i]} = {setting.get()}')
+		self.p.destroy()
 
 
 	def _create_widgets(self):
@@ -191,34 +197,40 @@ tk.Entry(p, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py)
 
 	def _start(self):
 		#make progressbar
-		prog = tk.IntVar(); prog.set(0)
-		max = 50
-		self.progressbar['maximum'] = max
-		self.progressbar['variable'] = prog
-
-		batches = [self.rule.iterations//max for i in range(max-1)]
-		batches.append(self.rule.iterations - sum(batches))
-
-		poss = []
-		for i, b in enumerate(batches):
-			if i == 0:
-				poss += self.rule.iterate(b)	
-			else:
-				poss += self.rule.iterate(b, poss[-1])		
-			prog.set(i+1)
-			self._root.update()
-
 		resolution = self._resx.get(), self._resy.get()
 		draw_colour = self._draw_R.get(), self._draw_G.get(), self._draw_B.get()
 		bkgr_colour = self._bkgr_R.get(), self._bkgr_G.get(), self._bkgr_B.get()
 		self.screen = drawer.Screen(resolution, draw_colour=draw_colour, bkgr_colour=bkgr_colour)
 		self.screen.draw_opacity_steps = int(self.opacity_entry.get())
 
+		prog = tk.IntVar(); prog.set(0)
+		self.progressbar['maximum'] = 3
+		self.progressbar['variable'] = prog
+
+		# batches = [self.rule.iterations//max for i in range(max-1)]
+		# batches.append(self.rule.iterations - sum(batches))
+
+		poss = self.rule.generate(screen=self.screen)
+		prog.set(1); self._root.update()
+		# for i, b in enumerate(batches):
+		# 	print(b)
+		# 	if i == 0:
+		# 		poss += self.rule.generate(screen=self.screen)	
+		# 	else:
+		# 		poss += self.rule.generate(b, start_pos=poss[-1], screen=self.screen)		
+		# 	prog.set(i+1)
+		# 	self._root.update()
+
 		self.screen.draw_pixels(poss, auto_size=True)
+		prog.set(2); self._root.update()
+
 		self.screen.save(self._save_path.get())
+		prog.set(3); self._root.update()
+
 		if self._show_on_completion.get():
 			self.screen.show()
 		self._update_path()
+		prog.set(0); self._root.update()
 
 main = MainWindow()
 main.mainloop()

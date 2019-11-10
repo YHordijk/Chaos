@@ -135,7 +135,7 @@ class Rule3:
 					eq = eq.replace(p[0], p[1])
 				self.vector_equations.append(eq)
 
-	def iterate(self, iterations=None, start_pos=None, iter_skip=0):
+	def generate(self, iterations=None, start_pos=None, iter_skip=0):
 		if iterations is None: iterations = self.iterations
 		self.x, self.y = start_pos if start_pos is not None else self.start_pos
 		
