@@ -1,14 +1,17 @@
-import mypackage.rule2 as rule
-import mypackage.drawer as draw
+import mypackage.drawer2 as draw
+import mypackage.colour as cmap
 import random
 import math
 import os
 import time
 
+l = 600
+
+s = draw.Screen((l,300), rangex=(-1,1), rangey=(-1,1))
+c = cmap.Hot()
 
 
-r = rule.JR1Attractor()
-r.load_snapshot(2)
-s = draw.Screen(resolution=(700,500), draw_opacity_steps=4)
-r.generate(screen=s, iter_skip=10)
+for x in range(l):
+	s.draw_line(((2*x/l-1,-1),(2*x/l-1,1)), c[x/l])
+
 s.show()

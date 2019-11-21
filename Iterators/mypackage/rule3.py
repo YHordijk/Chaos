@@ -6,8 +6,10 @@ import multiprocessing as mp
 
 
 class Rule3:
-	def __init__(self, screen=None, **kwargs):
-		self.screen = screen
+	def __init__(self, resolution=None, rangex=None, rangey=None, **kwargs):
+		self.resolution = resolution
+		self.rangex = rangex
+		self.rangey = rangey
 		self.vector_equations = None
 		self.parse_list = [['math.cos', 'np.cos'],
 						   ['math.sin', 'np.sin'],
@@ -26,22 +28,52 @@ class Rule3:
 					eq = eq.replace(p[0], p[1])
 				self.vector_equations.append(eq)
 
-	def generate(self, iterations=None, start_pos=None, iter_skip=0, processes=1, plot_on_screen=True, screen=None):
+	def generate(self, iterations=None, start_pos=None, iter_skip=0):
+		array = np.zeros(self.resolution)
 		if iterations is None: iterations = self.iterations
 		if start_pos is None: start_pos = self.start_pos
-		self.screen = screen
 
-		if type(start_pos) is list:
-			pool = mp.Pool(processes)
-			pos = pool.map(self.iterate, start_pos)
+		poss = []
+		pos = np.asarray(start_pos)
+		poss.append(pos)
+		
+		step = self.step
+
+		for _ in range(self.iterations):
+			pos = step(pos)
+			poss.append(pos)
+
+		array = self.input_pos(np.asarray(poss))
+
+		return array
+
+	def transform_to_disp(self, pos):
+		if type(pos) is tuple:
+			x, y = pos
 		else:
-			pos = self.iterate(start_pos)
-		if plot_on_screen:
-			if self.screen is not None:
-				self.screen.draw_pixels(pos[iter_skip:], auto_size=True)
-			else:
-				print('Error: please supply drawer.screen object.')
-		return pos
+			x, y = np.hsplit(pos,2)[0], np.hsplit(pos,2)[1]
+
+		x = ((x - self.rangex[0])*(self.resolution[0]-1)/(self.rangex[1]-self.rangex[0]))
+		y = ((y - self.rangey[0])*(self.resolution[1]-1)/(self.rangey[1]-self.rangey[0]))
+
+		return x.astype(int), y.astype(int)
+
+	def input_pos(self, poss, auto_size=True):
+		x, y = np.hsplit(poss, 2)
+		if auto_size:
+			self.rangex = x.min(), x.max()
+			self.rangey = y.min(), y.max()
+
+
+		x, y = self.transform_to_disp((x,y))
+
+		x = np.expand_dims(x, 2); y = np.expand_dims(y, 2)
+		poss = np.append(x, y, 1)
+		pa = np.zeros(self.resolution)
+		for p in poss:
+			pa[p[0],p[1]] += 1
+
+		return pa
 
 	def iterate_vector(self, start_pos_list, iterations, plot_on_screen=True, screen=None):
 		self.x, self.y = np.array_split(start_pos_list, 2, axis=1)
@@ -63,14 +95,6 @@ class Rule3:
 		snapshot = self.snapshots[index]
 		for val, var in zip(snapshot, self.vars):
 			setattr(self, var, val)
-
-	def iterate(self, start_pos):
-		poss = []
-		x, y = start_pos
-		for _ in range(self.iterations):
-			poss.append((x, y))
-			x, y = self.step((x, y))
-		return poss
 
 
 

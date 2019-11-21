@@ -1,10 +1,12 @@
 import tkinter as tk 
 from tkinter import ttk
 import os
-import mypackage.rule2 as rule
-import mypackage.drawer as drawer
+import mypackage.rule3 as rule
+import mypackage.colour_maps as cmap
+import mypackage.renderer as rend
 import time
 import multiprocessing as mp
+import numpy as np
 
 
 
@@ -17,6 +19,10 @@ class MainWindow(tk.Frame):
 		self._generate_standard_settings()
 		self.rule = self._chaotic_types_classes[0]
 		self._chaotic_type_index = 0
+
+		self._cmap_names = cmap.get_cmap_names()
+		self._cmap_classes = cmap.get_cmap_classes()
+		self._cmap = self._cmap_classes[0]
 
 		self._root = tk.Tk()
 		self._root.title('Chaos Drawer')
@@ -124,40 +130,18 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		tk.Label(sf, text='Display generated image: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
 		tk.Checkbutton(sf, variable=self._show_on_completion, bg=("light grey")).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 
-		#opacity setting
+		#cmap setting
 		curr_row += 1
-		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(sf, text='Opacity Steps: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		self.opacity_entry = tk.Entry(sf, textvariable=self._opacity_steps, width=3)
-		self.opacity_entry.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-
-		#draw colour
-		curr_row += 1
-		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(sf, text='Background Colour: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		self._colour_map = tk.StringVar(); self._colour_map.set(self._cmap_names[0]); self._cmap_cycles = tk.StringVar(); self._cmap_cycles.set(1)
 		frame = tk.Frame(sf, bg=("light grey"))
 		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		self._bkgr_R, self._bkgr_G, self._bkgr_B = tk.IntVar(), tk.IntVar(), tk.IntVar(); self._bkgr_R.set(0), self._bkgr_G.set(0), self._bkgr_B.set(0)
-		tk.Label(frame, text='R: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._bkgr_R, width=3).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='G:', bg=("light grey")).grid(row=curr_row, column=2, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._bkgr_G, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='B:', bg=("light grey")).grid(row=curr_row, column=4, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._bkgr_B, width=3).grid(row=curr_row, column=5, sticky='W', padx=px, pady=py)
-
-		#draw colour
-		curr_row += 1
-		self._opacity_steps = tk.IntVar(); self._opacity_steps.set(4)
-		tk.Label(sf, text='Draw Colour: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
-		frame = tk.Frame(sf, bg=("light grey"))
-		frame.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		self._draw_R, self._draw_G, self._draw_B = tk.IntVar(), tk.IntVar(), tk.IntVar(); self._draw_R.set(255), self._draw_G.set(255), self._draw_B.set(255)
-		tk.Label(frame, text='R: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._draw_R, width=3).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='G:', bg=("light grey")).grid(row=curr_row, column=2, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._draw_G, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
-		tk.Label(frame, text='B:', bg=("light grey")).grid(row=curr_row, column=4, sticky='W', pady=py)
-		tk.Entry(frame, textvariable=self._draw_B, width=3).grid(row=curr_row, column=5, sticky='W', padx=px, pady=py)
+		tk.Label(sf, text='Colour Map: ', anchor="e", bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		o = tk.OptionMenu(frame, self._colour_map, command=self._update_cmap, *self._cmap_names)
+		o.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
+		o.config(width=12)
+		tk.Label(frame, text='Colour Cycles: ', anchor="e", bg=("light grey")).grid(row=curr_row, column=2, sticky='W', padx=px, pady=py)
+		tk.Entry(frame, textvariable=self._cmap_cycles, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
+		tk.Button(frame, text='Show Sample', command=self._show_cmap).grid(row=curr_row, column=4, sticky="W", padx=px, pady=py)
 
 		#Path setting
 		curr_row += 1
@@ -175,6 +159,12 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		curr_row += 1
 		self.progressbar = ttk.Progressbar(r, orient='horizontal', length=500, mode='determinate')
 		self.progressbar.grid(row=curr_row, columnspan=2, padx=px, pady=py)
+
+	def _update_cmap(self, var=None):
+		self._cmap = self._cmap_classes[self._cmap_names.index(self._colour_map.get())]
+
+	def _show_cmap(self):
+		rend.draw_cmap_sample(self._cmap(cycles=int(self._cmap_cycles.get())))
 
 
 	def _update_path(self, var=None):
@@ -198,10 +188,7 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 	def _start(self):
 		#make progressbar
 		resolution = self._resx.get(), self._resy.get()
-		draw_colour = self._draw_R.get(), self._draw_G.get(), self._draw_B.get()
-		bkgr_colour = self._bkgr_R.get(), self._bkgr_G.get(), self._bkgr_B.get()
-		self.screen = drawer.Screen(resolution, draw_colour=draw_colour, bkgr_colour=bkgr_colour)
-		self.screen.draw_opacity_steps = int(self.opacity_entry.get())
+		self.renderer = rend.Renderer(resolution, colour_map=self._cmap(cycles=int(self._cmap_cycles.get())))
 
 		prog = tk.IntVar(); prog.set(0)
 		self.progressbar['maximum'] = 3
@@ -210,25 +197,28 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		# batches = [self.rule.iterations//max for i in range(max-1)]
 		# batches.append(self.rule.iterations - sum(batches))
 
-		poss = self.rule.generate(screen=self.screen)
+		self.rule.resolution = resolution
+		pixel_array = self.rule.generate()
+
 		prog.set(1); self._root.update()
 		# for i, b in enumerate(batches):
 		# 	print(b)
 		# 	if i == 0:
-		# 		poss += self.rule.generate(screen=self.screen)	
+		# 		poss += self.rule.generate(renderer=self.renderer)	
 		# 	else:
-		# 		poss += self.rule.generate(b, start_pos=poss[-1], screen=self.screen)		
+		# 		poss += self.rule.generate(b, start_pos=poss[-1], renderer=self.renderer)		
 		# 	prog.set(i+1)
 		# 	self._root.update()
 
-		self.screen.draw_pixels(poss, auto_size=True)
+		self.renderer.input_array(np.sqrt(pixel_array))
 		prog.set(2); self._root.update()
 
-		self.screen.save(self._save_path.get())
+		self.renderer.save(self._save_path.get())
 		prog.set(3); self._root.update()
 
 		if self._show_on_completion.get():
-			self.screen.show()
+			self.renderer.show()
+
 		self._update_path()
 		prog.set(0); self._root.update()
 
