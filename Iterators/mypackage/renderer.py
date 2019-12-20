@@ -12,13 +12,23 @@ import time
 
 
 class Renderer:
-	def __init__(self, resolution, rangex=None, rangey=None, colour_map=cmap.CoolWarm()):
+	def __init__(self, resolution=(0,0), rangex=None, rangey=None, colour_map=cmap.CoolWarm()):
 		self.disp = pg.surface.Surface(resolution)
 		self.resolution = resolution
 		self.rangex = rangex
 		self.rangey = rangey
 		self.colour_map = colour_map
 		self.pixel_array = np.zeros(resolution)
+
+	@property
+	def resolution(self):
+		return self._resolution
+	
+	@resolution.setter
+	def resolution(self, val):
+		self._resolution = val
+		self.disp = pg.surface.Surface(val)
+		
 
 	def clear(self):
 		self.pixel_array = np.zeros(resolution)
@@ -58,6 +68,7 @@ class Renderer:
 
 	def input_array(self, array):
 		self.pixel_array = array
+		self.resolution = array.shape
 
 	def input_pos(self, poss, auto_size=True):
 		x, y = np.hsplit(poss, 2)
@@ -75,8 +86,6 @@ class Renderer:
 		self.pixel_array = pa
 
 		return pa
-
-
 
 	def transform_to_disp(self, pos):
 		if type(pos) is tuple:

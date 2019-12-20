@@ -83,7 +83,6 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 			exec(f'self.rule.{self.rule.vars[i]} = {setting.get()}')
 		self.p.destroy()
 
-
 	def _create_widgets(self):
 		r = self._root
 		px, py = self.padx, self.pady
