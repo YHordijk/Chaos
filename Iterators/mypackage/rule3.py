@@ -2,11 +2,13 @@ import math
 import numpy as np
 import re
 import random
+import time
 import multiprocessing as mp
+import decimal
 
 
 class Rule3:
-	def __init__(self, resolution=None, rangex=None, rangey=None, **kwargs):
+	def __init__(self, resolution=(500,500), rangex=None, rangey=None, **kwargs):
 		self.resolution = resolution
 		self.rangex = rangex
 		self.rangey = rangey
@@ -195,39 +197,38 @@ class Mandelbrot(Rule3):
 		super().__init__(**kwargs)
 
 	def generate(self):
-		for i in range(self.screen.resolution[0]):
-			print(f'Generating Mandelbrot plot. Current progress: {round(100 * i / self.screen.resolution[0])}%', end='\r')
-			for j in range(self.screen.resolution[1]):
-				self.z = complex(0,0)
-				self.c = complex(*self.screen.transform_to_range((i,j)))
-				k = 0
-				delta = 2 * self.epsilon
-				keep_going = True
-				while delta > self.epsilon and k < self.max_iters and keep_going:
-					k += 1
-					try:
-						# new_z = (abs(self.z.real) + abs(self.z.imag))**2 + self.c
-						new_z = self.calc_next_z()
-						delta = abs(self.z - new_z)
-						self.z = new_z
-					except OverflowError:
-						keep_going = False
-				
+		
+		pixel_array = np.empty(self.resolution)
 
-				if k < self.max_iters and keep_going:
-					self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
-					# self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
+		if self.rangex is None:
+			self.rangex = self.left, self.right
+		if self.rangey is None:
+			self.rangey = self.bottom, self.top
 
-	def calc_next_z(self, z=None, c=None, e=None):
-		if self.rule_variant == 0:
-			return z**e + c
-		if self.rule_variant == 1:
-			return complex(abs(z.real), abs(z.imag))**2 + c
+		epsilon = self.conv_limit
+		max_iters = self.max_iters
+		fnc = compile(self.function, '', 'eval')
+
+		for i, x in enumerate(np.linspace(*self.rangex, self.resolution[0])):
+			for j, y in enumerate(np.linspace(*self.rangey, self.resolution[1])):
+				z = counter = 0
+				c = complex(x, y)
+				while abs(z) < epsilon and counter < max_iters:
+					counter += 1
+					z = eval(fnc)
+
+				pixel_array[i,j] = counter
+
+		return pixel_array
 
 	def set_rule(self):
-		self.vars = ['max_iters']
+		self.vars = ['max_iters', 'left', 'right', 'top', 'bottom', 'conv_limit', 'function']
 		self.equations = []
 		self.name = 'Mandelbrot Set'
+
+		self.snapshots = [[15, -2.5, 1.5, 2., -2, 4, 'z**2 + c']]
+
+		self.load_snapshot(0)
 
 		# self.epsilon = 10**-7
 		self.max_iters = 15
@@ -240,25 +241,29 @@ class Julia(Mandelbrot):
 		self.c = c
 		super().__init__(**kwargs)
 
-	def generate(self, function=None, **kwargs):
-		if function is None:
-			function = self.calc_next_z
+	def generate(self):
+		pixel_array = np.empty(self.resolution)
 
-		transform = self.screen.transform_to_range
-		next_z = self.calc_next_z
-		c = self.c
+		rangex = self.left, self.right
+		rangey = self.bottom, self.top
 
-		for i in range(self.screen.resolution[0]):
-			for j in range(self.screen.resolution[1]):
-				z = complex(*transform((i,j)))
-				k = 0
-				while abs(z) < 4 and k < self.max_iters:
-					k += 1
-					# new_z = (abs(self.z.real) + abs(self.z.imag))**2 + self.c
-					z = next_z(z, c, **kwargs)
+		epsilon = self.conv_limit
+		max_iters = self.max_iters
+		fnc = compile(self.function, '', 'eval')
+		print(max_iters)
+		start = time.perf_counter()
 
-				self.screen.draw_pixel((i, j, k/self.max_iters), mandelbrot=True)
-					# self.screen.draw_pixel(self.screen.transform_to_range((i,j)))
+		for i, x in enumerate(np.linspace(*rangex, self.resolution[0])):
+			for j, y in enumerate(np.linspace(*rangey, self.resolution[1])):
+				z = counter = 0
+				c = complex(x, y)
+				while abs(z) < epsilon and counter < max_iters:
+					counter += 1
+					z = eval(fnc)
+
+				pixel_array[i,j] = counter
+		print(time.perf_counter() - start)
+		return pixel_array
 
 	def set_rule(self):
 		self.vars = ['c', 'max_iters']

@@ -9,7 +9,6 @@ import multiprocessing as mp
 import numpy as np
 
 
-
 class MainWindow(tk.Frame):
 	def __init__(self):
 		#define some variables to ease selection of chaotic type and set objects for later
@@ -28,8 +27,10 @@ class MainWindow(tk.Frame):
 		self._root.title('Chaos Drawer')
 
 		self.padx, self.pady = 5, 3
-		self._create_widgets()
 		tk.Frame.__init__(self, self._root)
+		self._create_widgets()
+		self._show_cmap()
+		
 		self._snapshot = tk.IntVar(); self._snapshot.set(1)
 
 
@@ -80,8 +81,13 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		settings = self._chaotic_types_settings[self._chaotic_type_index]
 		#set rule variables according to settings set in self._set_parameter_widgets
 		for i, setting in enumerate(settings):
-			exec(f'self.rule.{self.rule.vars[i]} = {setting.get()}')
+			try:
+				setattr(self.rule, self.rule.vars[i], float(setting.get()))
+			except:
+				setattr(self.rule, self.rule.vars[i], setting.get())
+
 		self.p.destroy()
+
 
 	def _create_widgets(self):
 		r = self._root
@@ -114,7 +120,7 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 
 		#Resolution setting
 		curr_row += 1
-		self._resx, self._resy = tk.IntVar(), tk.IntVar(); self._resx.set(4000), self._resy.set(2250)
+		self._resx, self._resy = tk.IntVar(), tk.IntVar(); self._resx.set(800), self._resy.set(450)
 		tk.Label(sf, text='Resolution: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
 		#make container for resolution
 		frame = tk.Frame(sf, bg=("light grey"))
@@ -125,7 +131,7 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 
 		#Display on completion
 		curr_row += 1
-		self._show_on_completion = tk.BooleanVar(); self._show_on_completion.set(False)
+		self._show_on_completion = tk.BooleanVar(); self._show_on_completion.set(True)
 		tk.Label(sf, text='Display generated image: ', bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
 		tk.Checkbutton(sf, variable=self._show_on_completion, bg=("light grey")).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 
@@ -138,9 +144,15 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		o = tk.OptionMenu(frame, self._colour_map, command=self._update_cmap, *self._cmap_names)
 		o.grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
 		o.config(width=12)
-		tk.Label(frame, text='Colour Cycles: ', anchor="e", bg=("light grey")).grid(row=curr_row, column=2, sticky='W', padx=px, pady=py)
-		tk.Entry(frame, textvariable=self._cmap_cycles, width=3).grid(row=curr_row, column=3, sticky='W', padx=px, pady=py)
-		tk.Button(frame, text='Show Sample', command=self._show_cmap).grid(row=curr_row, column=4, sticky="W", padx=px, pady=py)
+
+		curr_row += 1
+		tk.Label(sf, text='Colour Cycles: ', anchor="e", bg=("light grey")).grid(row=curr_row, column=0, sticky='W', padx=px, pady=py)
+		tk.Entry(sf,textvariable=self._cmap_cycles, width=3).grid(row=curr_row, column=1, sticky='W', padx=px, pady=py)
+		self._cmap_cycles.trace('w', self._show_cmap)
+		#cmap preview
+		curr_row += 1
+		self.cmap_preview = tk.Canvas(height=30, width=522)
+		self.cmap_preview.grid(row=curr_row, column=0, sticky='W', padx=px, pady=py, columnspan=4)
 
 		#Path setting
 		curr_row += 1
@@ -156,14 +168,28 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 
 		#make progress bar
 		curr_row += 1
-		self.progressbar = ttk.Progressbar(r, orient='horizontal', length=500, mode='determinate')
+		self.progressbar = ttk.Progressbar(r, orient='horizontal', length=522, mode='determinate')
 		self.progressbar.grid(row=curr_row, columnspan=2, padx=px, pady=py)
+
+		self._show_cmap()
+
 
 	def _update_cmap(self, var=None):
 		self._cmap = self._cmap_classes[self._cmap_names.index(self._colour_map.get())]
+		self._show_cmap()
+		
 
-	def _show_cmap(self):
-		rend.draw_cmap_sample(self._cmap(cycles=int(self._cmap_cycles.get())))
+	def _show_cmap(self, *args, **kwargs):
+		cycles = self._cmap_cycles.get()
+		if cycles is not '':
+			y = self.cmap_preview.winfo_height()
+			cmap = self._cmap(cycles=int(cycles))
+			width = self.cmap_preview.winfo_width()
+			for x in range(width):
+				c = [hex(c)[2:] for c in cmap[x/width]]
+				c = ['0' + ci if len(ci) == 1 else '' + ci for ci in c]
+				c = '#' + ''.join(c)
+				self.cmap_preview.create_line(x,0,x,y, fill=c)
 
 
 	def _update_path(self, var=None):
@@ -177,6 +203,7 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		self._save_path.set(path)
 		self.path_entry.xview_scroll(1000, 'units')
 
+
 	def _update_rule(self, var=None):
 		#set rule according to chosen chaotic system
 		self._chaotic_type_index = self._chaotic_types.index(self._chaotic_type.get())
@@ -184,30 +211,24 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		self._update_path()
 
 
-	def _start(self):
+	def _start(self, resize=False):
 		#make progressbar
+		start = time.perf_counter()
 		resolution = self._resx.get(), self._resy.get()
-		self.renderer = rend.Renderer(resolution, colour_map=self._cmap(cycles=int(self._cmap_cycles.get())))
 
 		prog = tk.IntVar(); prog.set(0)
 		self.progressbar['maximum'] = 3
 		self.progressbar['variable'] = prog
 
-		# batches = [self.rule.iterations//max for i in range(max-1)]
-		# batches.append(self.rule.iterations - sum(batches))
-
 		self.rule.resolution = resolution
+		if resize:
+			self.rule.rangex = self.renderer.rangex
+			self.rule.rangey = self.renderer.rangey
+
 		pixel_array = self.rule.generate()
 
+		self.renderer = rend.Renderer(resolution, rangex=self.rule.rangex, rangey=self.rule.rangey, colour_map=self._cmap(cycles=int(self._cmap_cycles.get())))
 		prog.set(1); self._root.update()
-		# for i, b in enumerate(batches):
-		# 	print(b)
-		# 	if i == 0:
-		# 		poss += self.rule.generate(renderer=self.renderer)	
-		# 	else:
-		# 		poss += self.rule.generate(b, start_pos=poss[-1], renderer=self.renderer)		
-		# 	prog.set(i+1)
-		# 	self._root.update()
 
 		self.renderer.input_array(np.sqrt(pixel_array))
 		prog.set(2); self._root.update()
@@ -215,11 +236,27 @@ tk.Entry(pf, textvariable=setting).grid(row=curr_row, column=1, padx=px, pady=py
 		self.renderer.save(self._save_path.get())
 		prog.set(3); self._root.update()
 
+		print(time.perf_counter() - start)
+
 		if self._show_on_completion.get():
-			self.renderer.show()
+			resize = self.renderer.show()
 
 		self._update_path()
 		prog.set(0); self._root.update()
 
+
+
+		if resize:
+			self._start(True)
+
+
 main = MainWindow()
-main.mainloop()
+
+counter = 0
+while True:
+	main.update_idletasks()
+	main.update()
+	if counter == 0:
+		main._show_cmap()
+
+	counter += 1
