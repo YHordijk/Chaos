@@ -30,8 +30,8 @@ orb_1s = GTAO.get_func('1s')
 orb_2px = GTAO.get_func('2px')
 orb_2py = GTAO.get_func('2py')
 
-x_range = np.linspace(-8,8,700)
-y_range = np.linspace(-8,8,700)
+x_range = np.linspace(-8,8,600)
+y_range = np.linspace(-8,8,1000)
 Z = -30
 X, Y = np.meshgrid(x_range, y_range)
 
@@ -42,7 +42,10 @@ d = 4
 # dens = (-orb_2px(X - d/2, Y, Z) + orb_2px(X + d/2, Y, Z) - orb_2py(X - d/2, Y, Z) + orb_2py(X + d/2, Y, Z))
 # dens = (orb_2py(X - d/2, Y, Z) + orb_2py(X + d/2, Y, Z))
 # dens = (orb_1s(X - d/2, Y, Z) - orb_1s(X + d/2, Y, Z))
-dens = orb_1s(X,Y,Z)**2
+# dens = orb_1s(X,Y,Z)**2
+dens = orb_2py(X, Y, Z)**2
+print(np.amin(dens))
+print(np.amax(dens))
 renderer.input_array(dens)
 renderer.show()
 
